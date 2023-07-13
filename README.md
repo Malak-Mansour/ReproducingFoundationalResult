@@ -46,7 +46,7 @@ Solution: Disable TCP timestamps option with a sysctl command
 
 Here is the code that takes those comments into consideration:
 
-#Router:
+Router:
 
 ```
 iface_0=$(ip route get 10.10.1.100 | grep -oP "(?<=dev )[^ ]+")
@@ -59,9 +59,10 @@ sudo tc class add dev $iface_1 parent 1: classid 1:3 htb rate 1Gbit
 sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem delay 3ms loss 15.66283969% limit 100MB
 ```
 
-##Install iperf3 on Romeo and Juliet [3]
 
-#Romeo:
+Install iperf3 on Romeo and Juliet [3]
+
+Romeo:
 
 ```
 sudo apt-get update  
@@ -70,41 +71,42 @@ sudo apt-get -y install moreutils r-base-core r-cran-ggplot2 r-cran-littler
 sudo sysctl -w net.ipv4.tcp_no_metrics_save=1  
 ```
 
-#Juliet:
+Juliet:
 
 ```
 sudo apt-get update  
 sudo apt-get -y install iperf3  
 ```
 
-##Before you start the first experiment, disable TCP timestamps option, which consumes 12 bytes from what we set mss to
+Before you start the first experiment, disable TCP timestamps option, which consumes 12 bytes from what we set mss to
 
-#Romeo_2: [4] 
+Romeo_2: [4] 
 ```
 sysctl -w net. ipv4. tcp_timestamps=0  
 ```
 
-##Ping [3] 
+Ping [3] 
 
-#Romeo: (sending 5000 packets with 200ms in between each)
+Romeo: (sending 5000 packets with 200ms in between each)
 ```
 ping juliet -c 5000 -i 0.2
 ```
 
-##Using iperf3 with continuous ss-output file [3] (we will only be looking at the last line in the txt file since it summarizes all data transmitted in experiment run)
-#Juliet:
+Using iperf3 with continuous ss-output file [3] (we will only be looking at the last line in the txt file since it summarizes all data transmitted in experiment run)
+
+Juliet:
 ```
 iperf3 -s  -1  
 ```
 
-#Romeo_1:
+Romeo_1:
 ```
 wget -O ss-output.sh https://raw.githubusercontent.com/ffund/tcp-ip-essentials/gh-pages/scripts/ss-output.sh
 bash ss-output.sh 10.10.2.100  
 cat sender-ss.txt | grep "reno"
 ```
 
-#Romeo_2: [2] (240s duration, TCP reno, MSS 1460)
+Romeo_2: [2] (240s duration, TCP reno, MSS 1460)
 ```
 iperf3 -c juliet -t 240 -C reno -M 1460
 ```
