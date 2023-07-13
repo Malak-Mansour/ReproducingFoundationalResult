@@ -47,34 +47,35 @@ Solution: Disable TCP timestamps option with a sysctl command
 Here is the code that takes those comments into consideration:
 
 #Router:
+
+```
 iface_0=$(ip route get 10.10.1.100 | grep -oP "(?<=dev )[^ ]+")
-
 sudo tc qdisc del dev $iface_0 root
-
 sudo tc qdisc add dev $iface_0 root netem delay 3ms 
-
 iface_1=$(ip route get 10.10.2.100 | grep -oP "(?<=dev )[^ ]+")
-
 sudo tc qdisc del dev $iface_1 root
-
 sudo tc qdisc add dev $iface_1 root handle 1: htb default 3
-
 sudo tc class add dev $iface_1 parent 1: classid 1:3 htb rate 1Gbit
-
 sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem delay 3ms loss 15.66283969% limit 100MB
+```
 
 ##Install iperf3 on Romeo and Juliet [3]
 
 #Romeo:
+
+```
 sudo apt-get update  
 sudo apt-get -y install iperf3  
 sudo apt-get -y install moreutils r-base-core r-cran-ggplot2 r-cran-littler
 sudo sysctl -w net.ipv4.tcp_no_metrics_save=1  
+```
 
 #Juliet:
+
+```
 sudo apt-get update  
 sudo apt-get -y install iperf3  
-
+```
 
 ##Before you start the first experiment, disable TCP timestamps option, which consumes 12 bytes from what we set mss to
 
