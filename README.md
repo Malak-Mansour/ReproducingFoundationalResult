@@ -48,12 +48,19 @@ Here is the code that takes those comments into consideration:
 
 #Router:
 iface_0=$(ip route get 10.10.1.100 | grep -oP "(?<=dev )[^ ]+")
+
 sudo tc qdisc del dev $iface_0 root
+
 sudo tc qdisc add dev $iface_0 root netem delay 3ms 
+
 iface_1=$(ip route get 10.10.2.100 | grep -oP "(?<=dev )[^ ]+")
+
 sudo tc qdisc del dev $iface_1 root
+
 sudo tc qdisc add dev $iface_1 root handle 1: htb default 3
+
 sudo tc class add dev $iface_1 parent 1: classid 1:3 htb rate 1Gbit
+
 sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem delay 3ms loss 15.66283969% limit 100MB
 
 ##Install iperf3 on Romeo and Juliet [3]
