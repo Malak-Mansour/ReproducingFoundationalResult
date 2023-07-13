@@ -64,6 +64,7 @@ sudo tc class add dev $iface_1 parent 1: classid 1:3 htb rate 1Gbit
 sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem delay 3ms loss 15.66283969% limit 100MB
 
 ##Install iperf3 on Romeo and Juliet [3]
+
 #Romeo:
 sudo apt-get update  
 sudo apt-get -y install iperf3  
@@ -82,6 +83,7 @@ sysctl -w net. ipv4. tcp_timestamps=0
 
 
 ##Ping [3] 
+
 #Romeo: (sending 5000 packets with 200ms in between each)
 ping juliet -c 5000 -i 0.2
 
