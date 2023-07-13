@@ -80,24 +80,31 @@ sudo apt-get -y install iperf3
 ##Before you start the first experiment, disable TCP timestamps option, which consumes 12 bytes from what we set mss to
 
 #Romeo_2: [4] 
+```
 sysctl -w net. ipv4. tcp_timestamps=0  
-
+```
 
 ##Ping [3] 
 
 #Romeo: (sending 5000 packets with 200ms in between each)
+```
 ping juliet -c 5000 -i 0.2
-
+```
 
 ##Using iperf3 with continuous ss-output file [3] (we will only be looking at the last line in the txt file since it summarizes all data transmitted in experiment run)
 #Juliet:
+```
 iperf3 -s  -1  
+```
 
 #Romeo_1:
+```
 wget -O ss-output.sh https://raw.githubusercontent.com/ffund/tcp-ip-essentials/gh-pages/scripts/ss-output.sh
 bash ss-output.sh 10.10.2.100  
 cat sender-ss.txt | grep "reno"
+```
 
 #Romeo_2: [2] (240s duration, TCP reno, MSS 1460)
+```
 iperf3 -c juliet -t 240 -C reno -M 1460
-
+```
