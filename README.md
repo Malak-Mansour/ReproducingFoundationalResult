@@ -15,16 +15,8 @@ The paper's primary purpose is to
 2. Validate this foundational result through three primary network environments: Queueless Random Packet Loss, Environments with Queueing (not random), Effect of TCP Implementation.
 
 # First Environment Setup
-In this document, we are focusing on reproducing results from the first environment: Queueless Random Packet Loss. In this environment, they validate the BW-predicting model by assuming that no queue is formed and setting random packet losses.
-
-
-
-
-
-
-
-
-
-
-# Experiment run
+In this document, we are focusing on reproducing results from the first environment: Queueless Random Packet Loss. In this environment, they validate the BW-predicting model by measuring BW under the assumption that no queue is formed and packet losses are random
+#First, we don't want a queue to form. Check the maximum BW in figure 3 of the paper. 
+Question: Now when we set the bottleneck link rate, what's the most appropriate value to use? (hint: with respect to this maximum BW value)
+Answer: If we don't want a queue to form, then the bottleneck link rate must be greater than the maximum possible BW.
 1Gbit bottleneck link rate [3], 0.1GB buffer on both sides [3], delay and loss [1] change depending on trial settings
