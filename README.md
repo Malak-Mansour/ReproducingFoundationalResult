@@ -132,6 +132,7 @@ Ping [3]
 Romeo: (sending **5000** packets with 200ms in between each)
 ```
 `ping juliet -c `**`5000`**` -i 0.2`
+`sample`**`sample`**`sample`
 ```
 
 Using iperf3 with continuous ss-output file [3] (we will only be looking at the last line in the txt file since it summarizes all data transmitted in experiment run)
