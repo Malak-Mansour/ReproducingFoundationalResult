@@ -131,7 +131,7 @@ Ping [3]
 
 Romeo: (sending **5000** packets with 200ms in between each)
 ```
-ping juliet -c **5000** -i 0.2
+ping juliet -c `**`5000`**` -i 0.2
 ```
 
 Using iperf3 with continuous ss-output file [3] (we will only be looking at the last line in the txt file since it summarizes all data transmitted in experiment run)
@@ -147,7 +147,7 @@ bash ss-output.sh 10.10.2.100
 cat sender-ss.txt | grep "reno"
 ```
 
-Romeo_2: [2] (240s duration, TCP reno, MSS 1460)
+Romeo_2: [2] (240s duration, TCP reno, MSS **1460**)
 ```
 iperf3 -c juliet -t 240 -C reno -M **1460**
 ```
@@ -156,6 +156,9 @@ iperf3 -c juliet -t 240 -C reno -M **1460**
 
 # Resources
 [1] https://www.cs.unm.edu/~crandall/netsfall13/TCtutorial.pdf 
+
 [2] https://manpages.ubuntu.com/manpages/xenial/man1/iperf3.1.html 
+
 [3] https://witestlab.poly.edu/blog/tcp-congestion-control-basics/#setupexperiment 
+
 [4] https://docs.vmware.com/en/vRealize-Operations/8.10/com.vmware.vcom.scg.doc/GUID-DAC867BC-8C5F-4A5E-BB55-36FC25555696.html 
