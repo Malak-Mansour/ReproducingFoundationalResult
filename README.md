@@ -117,7 +117,6 @@ For the each trial, do the following. Change the parameters in **bold** (or surr
 Router:
 
 ```
-
 iface_0=$(ip route get 10.10.1.100 | grep -oP "(?<=dev )[^ ]+")
 sudo tc qdisc del dev $iface_0 root
 sudo tc qdisc add dev $iface_0 root netem delay **3ms** 
@@ -126,7 +125,6 @@ sudo tc qdisc del dev $iface_1 root
 sudo tc qdisc add dev $iface_1 root handle 1: htb default 3
 sudo tc class add dev $iface_1 parent 1: classid 1:3 htb rate 1Gbit
 sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem delay **3ms** loss **15.66283969%** limit 100MB
-
 ```
 
 Ping [3] 
@@ -134,9 +132,7 @@ Ping [3]
 Romeo: (sending **5000** packets with 200ms in between each)
 
 ```
-
 ping juliet -c **5000** -i 0.2
-
 ```
 
 Using iperf3 with continuous ss-output file [3] (we will only be looking at the last line in the txt file since it summarizes all data transmitted in experiment run)
@@ -154,9 +150,7 @@ cat sender-ss.txt | grep "reno"
 
 Romeo_2: [2] (240s duration, TCP reno, MSS **1460**)
 ```
-
 iperf3 -c juliet -t 240 -C reno -M **1460**
-
 ```
 
 
