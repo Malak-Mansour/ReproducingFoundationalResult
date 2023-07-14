@@ -33,7 +33,7 @@ First, we don't want a queue to form. Check the maximum BW in Figure 3 of the pa
 ![image](https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/25700a2f-5861-4e8e-b7dd-083d72e475d5)
 
 # First environment runs
-We now want to start running the 60 trials from the first environment. We will start with 20 trials corresponding to the 1460 Bytes MSS case. 
+We now want to start running the 60 trials from the first environment. We will start with 20 trials corresponding to the 1460 Bytes MSS case (will do 4312 and 536 Bytes cases after). 
 
 Here are 3 methodological issues that were only discovered upon reproducing research:
 1. Validating packet loss: p-value matches the description of p in the paper
