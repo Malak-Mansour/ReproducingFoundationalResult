@@ -112,7 +112,7 @@ iperf3 -c juliet -t 240 -C reno -M 1460
 ```
 
 # Code for remaining trials
-For the each trial, do the following. Change the parameters in **bold** depending on each trial's settings.
+For the each trial, do the following. Change the parameters in **bold** (or surrounded by 2 asterisks '** **') depending on each trial's settings.
 
 Router:
 
@@ -131,8 +131,7 @@ Ping [3]
 
 Romeo: (sending **5000** packets with 200ms in between each)
 ```
-`ping juliet -c `**`5000`**` -i 0.2`
-`sample`**`sample`**`sample`
+ping juliet -c **5000** -i 0.2
 ```
 
 Using iperf3 with continuous ss-output file [3] (we will only be looking at the last line in the txt file since it summarizes all data transmitted in experiment run)
