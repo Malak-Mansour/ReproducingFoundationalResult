@@ -153,6 +153,63 @@ Romeo_2: [2] (240s duration, TCP reno, MSS **1460**)
 iperf3 -c juliet -t 240 -C reno -M **1460**
 ```
 
+# Methodological issues
+
+
+# Possible fixes
+### If you're getting weird results in your validation steps (ping or ss-output), here are some things to do to check where the problem is. 
+
+If you changed the delay, on the romeo or juliet ends, then your network topology would be wrong because this is how it should look like:
+![image](https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/18bb6ce4-810b-42f8-81e0-34637d25755c)
+
+
+Let's test that - if we 'ping' from iface0 of router to romeo, we should see 151.5ms of round trip delay. On the router, run
+```
+ping -c 10 10.10.1.100
+```
+
+also if we 'ping' from iface1 of router to juliet, we should see 151.5ms of round trip delay. So on the router, run
+```
+ping -c 10 10.10.2.100
+```
+
+If there is any extra delay on the romeo-router path, run this on the router: 
+```
+iface_0=$(ip route get 10.10.1.100 | grep -oP "(?<=dev )[^ ]+")
+sudo tc qdisc del dev $iface_0 root
+sudo tc qdisc add dev $iface_0 root netem delay 0 
+```
+
+This sets 0ms delay on the iface0 interface of the router. Now repeat that router-romeo ping:
+```
+ping -c 10 10.10.1.100
+```
+
+
+If the delay is on packets leaving romeo, run this on romeo to see when you may have mistakenly added a delay:
+```
+tc -s qdisc show
+sudo cat /var/log/auth.log | grep "qdisc"
+```
+
+Remove any additional delay or loss from iface0 on romeo
+```
+iface_0=$(ip route get 10.10.1.100 | grep -oP "(?<=dev )[^ ]+")
+sudo tc qdisc del dev $iface_0 root
+```
+
+After you do this, you should test again and make sure the delay is gone
+```
+ping -c 10 10.10.1.100
+```
+
+~Similarly, if there is any extra delay on the juliet-router path, run the same commands above but using iface_1 and 10 10.10.2.100
+
+###  It is normal for the receiver BW to be slightly smaller
+The throughput is "data sent/time". 
+The sender considers "time" to be "time from connection start, to time I sent last bit". 
+The receiver considers "time" to be "time from connection start, to time I got the last bit"
+The receiver gets the last bit a little later than the sender sends it, so the denominator in the receiver throughput is a tiny bit bigger, contributing to a slightly higher BW.
 
 
 # Resources
