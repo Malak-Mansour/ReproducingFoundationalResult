@@ -82,7 +82,7 @@ Before you start the first experiment, disable TCP timestamps option, which cons
 
 Romeo_2: [4] 
 ```
-sysctl -w net. ipv4. tcp_timestamps=0  
+sudo sysctl -w net.ipv4.tcp_timestamps=0  
 ```
 
 Ping [3] 
