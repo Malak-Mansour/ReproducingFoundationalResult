@@ -21,13 +21,18 @@ In this document, we are focusing on reproducing results from the first environm
 
 <img width="272" alt="image" src="https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/e04ea6f0-1a89-4e6b-94ee-d68323bbe4dd">
 
+### Parameter values
 One-way delay takes the following values 3, 77.25, 151.5, 225.75, and 300 ms. MSS takes 536, 1460, and 4312 bytes. Sine Figure 3 has approximately 60 points in total, we conclude that the number of uniformly distributed values of packet loss (in log(p)) are 4: 5 delay * 3 MSS * 4 p = 60 BW points). For every combination of MSS and delay, generate 4 uniformly distributed values of p between 0.00003 and 0.3. Generate on excel 60 points with those parameters, and number each trial.
 
-This is the network topology
-
+### This is the network topology
 
 ![image](https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/b300d43c-7884-468e-9782-6ec439dadae0)
 
+
+### 60 trials table
+Here is a google sheet with my 60 trials for your reference: https://docs.google.com/spreadsheets/d/1vfvR07gic8oynpdxMrSt_JkWlNSyXOmwcM6QkL_JecY/edit 
+
+### Bottleneck link rate
 First, we don't want a queue to form. Check the maximum BW in Figure 3 of the paper. If we don't want a queue to form, then the bottleneck link rate must be greater than the maximum possible BW. The maximum BW in the plot is around 2e8 bits/s, so we will set the bottleneck link rate to 1Gbit with  0.1GB buffer on both sides of the router (towards romeo and towards juliet)
 
 ![image](https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/25700a2f-5861-4e8e-b7dd-083d72e475d5)
@@ -46,6 +51,7 @@ Solution: Disable TCP timestamps option with a sysctl command
 
 Here is the code that takes those comments into consideration:
 
+### Setup delay and loss on router
 Router:
 
 ```
@@ -60,7 +66,7 @@ sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem delay 3ms loss 15.6628
 ```
 
 
-Install iperf3 on Romeo and Juliet [3]
+### Install iperf3 on Romeo and Juliet [3]
 
 Romeo:
 
@@ -78,7 +84,7 @@ sudo apt-get update
 sudo apt-get -y install iperf3  
 ```
 
-Before you start the first experiment, disable TCP timestamps option, which consumes 12 bytes from what we set mss to
+### Before you start the first experiment, disable TCP timestamps option, which consumes 12 bytes from what we set mss to
 
 Romeo_2: [4] 
 ```
@@ -92,23 +98,55 @@ Romeo: (sending 5000 packets with 200ms in between each)
 ping juliet -c 5000 -i 0.2
 ```
 
-Using iperf3 with continuous ss-output file [3] (we will only be looking at the last line in the txt file since it summarizes all data transmitted in experiment run)
+### If you are running the MSS=4312B case, increase mtu 
+Current MTU is 1500B, 20B are consumed by IP header and 20B by TCP header, that’s why max mss is 1460B (with disabled tcp timestamps option). Increase MTU (Maximum Transmission Unit), which is the maximum size of the packet that can be transmitted from a network interface, to allow for MSS=4312B. Considering the 40B consumed by headers and assuming disabled timestamps, we will need MTU=4352B (4312+40).
 
-Juliet:
+Check the current mtu value using
+```
+ifconfig | grep mtu
+```
+
+
+Increase the MTU on the experiment interface of romeo and juliet
+
+Romeo and Juliet: [5]
+```
+sudo ifconfig ens7 mtu 4352 up
+```
+
+
+Increase the MTU on both of the experiment interfaces on the router
+
+Router: [5]
+
+```
+sudo ifconfig ens7 mtu 4352 up
+sudo ifconfig ens8 mtu 4352 up
+```
+
+
+### Using iperf3 with continuous ss-output file 
+we will only be looking at the last line in the ss-output txt file since it summarizes all data transmitted in experiment run
+
+Juliet: [3]
 ```
 iperf3 -s  -1  
 ```
 
-Romeo_1:
+Romeo_1: [3]
 ```
 wget -O ss-output.sh https://raw.githubusercontent.com/ffund/tcp-ip-essentials/gh-pages/scripts/ss-output.sh
 bash ss-output.sh 10.10.2.100  
-cat sender-ss.txt | grep "reno"
 ```
 
 Romeo_2: [2] (240s duration, TCP reno, MSS 1460)
 ```
 iperf3 -c juliet -t 240 -C reno -M 1460
+```
+
+Romeo_1: [3]
+```
+cat sender-ss.txt | grep "reno"
 ```
 
 # Code for remaining trials
@@ -127,7 +165,7 @@ sudo tc class add dev $iface_1 parent 1: classid 1:3 htb rate 1Gbit
 sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem delay **3ms** loss **15.66283969%** limit 100MB
 ```
 
-Ping [3] 
+### Ping [3] 
 
 Romeo: (sending **5000** packets with 200ms in between each)
 
@@ -135,23 +173,28 @@ Romeo: (sending **5000** packets with 200ms in between each)
 ping juliet -c **5000** -i 0.2
 ```
 
-Using iperf3 with continuous ss-output file [3] (we will only be looking at the last line in the txt file since it summarizes all data transmitted in experiment run)
+### Using iperf3 with continuous ss-output file 
 
-Juliet:
+Juliet: [3]
 ```
 iperf3 -s  -1  
 ```
 
-Romeo_1:
+Romeo_1: [3]
 ```
 bash ss-output.sh 10.10.2.100  
-cat sender-ss.txt | grep "reno"
 ```
 
 Romeo_2: [2] (240s duration, TCP reno, MSS **1460**)
 ```
 iperf3 -c juliet -t 240 -C reno -M **1460**
 ```
+
+Romeo_1: [3]
+```
+cat sender-ss.txt | grep "reno"
+```
+
 
 # Methodological issues
 
@@ -211,6 +254,9 @@ The sender considers "time" to be "time from connection start, to time I sent la
 The receiver considers "time" to be "time from connection start, to time I got the last bit"
 The receiver gets the last bit a little later than the sender sends it, so the denominator in the receiver throughput is a tiny bit bigger, contributing to a slightly higher BW.
 
+
+# Analyzing results
+To analyze results, we are plotting the experimental BW (from iperf in JupyterLab) against the model BW (from the calculations using the model), and comparing it to figure 3 in the paper. 
 
 # Resources
 [1] https://www.cs.unm.edu/~crandall/netsfall13/TCtutorial.pdf 
