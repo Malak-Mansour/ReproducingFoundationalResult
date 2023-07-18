@@ -246,7 +246,7 @@ After you do this, you should test again and make sure the delay is gone
 ping -c 10 10.10.1.100
 ```
 
-~Similarly, if there is any extra delay on the juliet-router path, run the same commands above but using iface_1 and 10 10.10.2.100
+~Similarly, if there is any extra delay on the juliet-router path, run the same commands above but using iface_1 and 10.10.2.100
 
 ###  It is normal for the receiver BW to be slightly smaller
 The throughput is "data sent/time". 
