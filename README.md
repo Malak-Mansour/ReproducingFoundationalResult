@@ -103,6 +103,7 @@ sudo sysctl -w net.ipv4.tcp_timestamps=0
 Considering the 40B consumed by headers and assuming disabled timestamps, we will need MTU=4352B (4312+40).
 
 ##### Check the current mtu value using
+Romeo, Juliet, and/or Router:
 ```
 ifconfig | grep mtu
 ```
