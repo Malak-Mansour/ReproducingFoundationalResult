@@ -209,9 +209,9 @@ sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem delay **3ms** loss **1
 
 ### Ping 
 
-Romeo: (sending 5000 packets with 200ms in between each) [3] 
+Romeo: (sending **5000** packets with 200ms in between each) [3] 
 ```
-ping juliet -c 5000 -i 0.2
+ping juliet -c **5000** -i 0.2
 ```
 
 ##### Data to look at:
@@ -235,9 +235,9 @@ bash ss-output.sh 10.10.2.100
 ```
 
 While that is running, paste the following in the other Romeo terminal, 
-Romeo_2: [2] (240s duration, TCP reno, MSS 1460)
+Romeo_2: [2] (240s duration, TCP reno, MSS **1460**)
 ```
-iperf3 -c juliet -t 240 -C reno -M 1460
+iperf3 -c juliet -t 240 -C reno -M **1460**
 ```
 
 When the process in Romeo_2 is done, bash will also stop running, but the process will not close, so you need to close it manually using ctrl+C. Then paste the following to see the output with tcp reno, 
