@@ -17,40 +17,78 @@ The paper's primary purpose is to
 2. Validate this foundational result through three primary network environments: Queueless Random Packet Loss, Environments with Queueing (not random), Effect of TCP Implementation.
 
 # First Environment Setup
-In this document, we are focusing on reproducing results from the first environment: Queueless Random Packet Loss. In this environment, they validate the BW-predicting model by measuring BW under the assumption that no queue is formed and packet losses are random. The foundational result that we are validating involves varying three parameters (Delay, MSS, packet loss (p)) to produce BW. 
-
+In this document, we are focusing on reproducing results from the first environment: Queueless Random Packet Loss. In this environment, they validated the BW-predicting model by measuring BW under the assumption that no queue is formed and packet losses are random. The foundational result that we are validating involves varying three parameters (Delay, MSS, packet loss (p)) to produce BW. 
 
 <img width="272" alt="image" src="https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/e04ea6f0-1a89-4e6b-94ee-d68323bbe4dd">
 
-### Parameter values
+
+## Methodological issues
+Here are some methodological issues that were only discovered upon reproducing research:
+
+1. The number of data points/trials to run
+
+Solution: counted the points in Figure 3 to be 60
+
+2. Choosing which five RTT values to take between 3 and 300ms since no details were given about the exact values
+
+Solution: chose 5 values that are equally apart: 3, 77.25, 151.5, 225.75, and 300 ms
+
+3. The randomness in the choice of packet loss values uniformly distributed in log(p) between  0.00003 and  0.3
+
+Solution: 60 total points, 3 MSS, and 5 rtt, leaves 4 points for p. Also, figure 3 has packet loss on its x axis, so we have many values of p. Therefore, for every combination of MSS and delay, we generated 4 uniformly distributed values between 0.00003 and 0.3
+
+4. Validating packet loss to make sure p-value matches the description of p in the paper: it didn't match the description, and that showed when our experimental BandWidth was off by 2 orders of magnitude.
+
+Solution: Multiply p by 100 to express in % (eg. p=0.3 is 30%)
+
+5. Selecting appropriate duration: no loss with low p because not enough duration
+
+Solution: increase duration from 60s to 240s
+
+6. For 1460 byte mss (and 4312 bytes), the actual mss is 12 bytes less than expected 
+
+Solution: Disable TCP timestamps option with a sysctl command
+
+7. For 4312 byte mss, we run into the limit of MTU
+
+Solution: Need to increase interface MTU (e.g. with ifconfig)
+
+
+8. Confusion arises about whether a wrong result (experimental BW being too different from model BW) is only an outlier or an experimental error, and if the trial should be run again.
+
+Solution: We have to validate our experiments using ping (sends many packets) and generate an ss-output file to validate that our settings are correct by confirming the parameter values. 
+
+If it is an experimental error and we have mistakenly set something wrong, then we can repeat the trial and set the correct parameters. 
+
+Otherwise, if for example not enough packets have been sent to even see a packet loss or a queue formed, then we can increase the duration or number of packets for **all** trials to have a fixed setting for all! Don’t repeat experiments just because of unusual results because we would be “forcing results” and “throwing out data”. 
+
+If both of these have been done and still the results are not exactly as expected, then it is probably an outlier, which is okay to exist!
+
+
+
+## Parameter values
 One-way delay takes the following values 3, 77.25, 151.5, 225.75, and 300 ms. MSS takes 536, 1460, and 4312 bytes. Sine Figure 3 has approximately 60 points in total, we conclude that the number of uniformly distributed values of packet loss (in log(p)) are 4: 5 delay * 3 MSS * 4 p = 60 BW points). For every combination of MSS and delay, generate 4 uniformly distributed values of p between 0.00003 and 0.3. Generate on excel 60 points with those parameters, and number each trial.
 
-### This is the network topology
+## This is the network topology
 
 ![image](https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/b300d43c-7884-468e-9782-6ec439dadae0)
 
 
-### 60 trials table
+## 60 trials table
 Here is a google sheet with my 60 trials for your reference: https://docs.google.com/spreadsheets/d/1vfvR07gic8oynpdxMrSt_JkWlNSyXOmwcM6QkL_JecY/edit 
 
-### Bottleneck link rate
+## Bottleneck link rate
 First, we don't want a queue to form. Check the maximum BW in Figure 3 of the paper. If we don't want a queue to form, then the bottleneck link rate must be greater than the maximum possible BW. The maximum BW in the plot is around 2e8 bits/s, so we will set the bottleneck link rate to 1Gbit with  0.1GB buffer on both sides of the router (towards romeo and towards juliet)
 
 ![image](https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/25700a2f-5861-4e8e-b7dd-083d72e475d5)
 
+
+
 # First environment runs
 We now want to start running the 60 trials from the first environment. We will start with 20 trials corresponding to the 1460 Bytes MSS case (will do 4312 and 536 Bytes cases after). 
 
-Here are 3 methodological issues that were only discovered upon reproducing research:
-1. Validating packet loss: p-value matches the description of p in the paper
-Solution: Multiply p by 100 to express in % (eg. p=0.3 is 30%)
-2. Selecting appropriate duration: no loss with low p because not enough duration
-Solution: increase duration 
-3. For 1460 byte mss, the actual mss is 12 bytes less than expected 
-Solution: Disable TCP timestamps option with a sysctl command
 
-
-Here is the code that takes those comments into consideration:
+## Code that takes the methodological issues into consideration:
 
 ### Setup delay and loss on router
 Router:
@@ -259,8 +297,6 @@ ss-output:
 
 2. retrans and data_segs_out: packet loss=retrans/data_segs_out (that it matches what you set it to- not the percentage value)
 
-
-# Methodological issues
 
 
 # Possible fixes
