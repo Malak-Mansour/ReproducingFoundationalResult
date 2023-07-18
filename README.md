@@ -141,29 +141,52 @@ Romeo: (sending 5000 packets with 200ms in between each) [3]
 ping juliet -c 5000 -i 0.2
 ```
 
+##### Data to look at:
+1. min and avg rtt (that avg rtt is not much larger than min rtt, otherwise a queue would have formed)
+
+2. packet loss (that it matches what you set it to- percentage value)
+
+
 ### Using iperf3 with continuous ss-output file 
-we will only be looking at the last line in the ss-output txt file since it summarizes all data transmitted in experiment run
+we will only be looking at the last line in the ss-output txt file since it summarizes all data transmitted in experiment run the following simultaneously.
 
 Juliet: [3]
 ```
 iperf3 -s  -1  
 ```
 
+While that is running, paste the following in one Romeo terminal, 
 Romeo_1: [3]
 ```
 wget -O ss-output.sh https://raw.githubusercontent.com/ffund/tcp-ip-essentials/gh-pages/scripts/ss-output.sh
 bash ss-output.sh 10.10.2.100  
 ```
 
+While that is running, paste the following in the other Romeo terminal, 
 Romeo_2: [2] (240s duration, TCP reno, MSS 1460)
 ```
 iperf3 -c juliet -t 240 -C reno -M 1460
 ```
 
+When the process in Romeo_2 is done, bash will also stop running, but the process will not close, so you need to close it manually using ctrl+C. Then paste the following to see the output with tcp reno, 
 Romeo_1: [3]
 ```
 cat sender-ss.txt | grep "reno"
 ```
+
+##### Data to look at:
+iperf:
+
+BandWidth: compare it to model BW, you can find the ratio of experimental BW to model BW
+
+
+ss-output:
+
+1. min and avg rtt (that avg rtt is not much larger than min rtt, otherwise a queue would have formed)
+
+2. retrans and data_segs_out: packet loss=retrans/data_segs_out (that it matches what you set it to- not the percentage value)
+
+
 
 # Code for remaining trials
 For the each trial, do the following. Change the parameters in **bold** (or surrounded by 2 asterisks '** **') depending on each trial's settings.
@@ -181,35 +204,59 @@ sudo tc class add dev $iface_1 parent 1: classid 1:3 htb rate 1Gbit
 sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem delay **3ms** loss **15.66283969%** limit 100MB
 ```
 
-### Ping [3] 
 
-Romeo: (sending **5000** packets with 200ms in between each)
+## Validating results and measuring BW
 
+### Ping 
+
+Romeo: (sending 5000 packets with 200ms in between each) [3] 
 ```
-ping juliet -c **5000** -i 0.2
+ping juliet -c 5000 -i 0.2
 ```
+
+##### Data to look at:
+1. min and avg rtt (that avg rtt is not much larger than min rtt, otherwise a queue would have formed)
+
+2. packet loss (that it matches what you set it to- percentage value)
+
 
 ### Using iperf3 with continuous ss-output file 
+we will only be looking at the last line in the ss-output txt file since it summarizes all data transmitted in experiment run the following simultaneously.
 
 Juliet: [3]
 ```
 iperf3 -s  -1  
 ```
 
+While that is running, paste the following in one Romeo terminal, 
 Romeo_1: [3]
 ```
 bash ss-output.sh 10.10.2.100  
 ```
 
-Romeo_2: [2] (240s duration, TCP reno, MSS **1460**)
+While that is running, paste the following in the other Romeo terminal, 
+Romeo_2: [2] (240s duration, TCP reno, MSS 1460)
 ```
-iperf3 -c juliet -t 240 -C reno -M **1460**
+iperf3 -c juliet -t 240 -C reno -M 1460
 ```
 
+When the process in Romeo_2 is done, bash will also stop running, but the process will not close, so you need to close it manually using ctrl+C. Then paste the following to see the output with tcp reno, 
 Romeo_1: [3]
 ```
 cat sender-ss.txt | grep "reno"
 ```
+
+##### Data to look at:
+iperf:
+
+BandWidth: compare it to model BW, you can find the ratio of experimental BW to model BW
+
+
+ss-output:
+
+1. min and avg rtt (that avg rtt is not much larger than min rtt, otherwise a queue would have formed)
+
+2. retrans and data_segs_out: packet loss=retrans/data_segs_out (that it matches what you set it to- not the percentage value)
 
 
 # Methodological issues
