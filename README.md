@@ -102,7 +102,7 @@ sudo sysctl -w net.ipv4.tcp_timestamps=0
 ### If you are running the MSS=4312B case, increase mtu 
 Considering the 40B consumed by headers and assuming disabled timestamps, we will need MTU=4352B (4312+40).
 
-##### Check the current mtu value using
+##### You can check the current mtu value using
 Romeo, Juliet, and/or Router:
 ```
 ifconfig | grep mtu
@@ -124,6 +124,12 @@ Router: [5]
 ```
 sudo ifconfig ens7 mtu 4352 up
 sudo ifconfig ens8 mtu 4352 up
+```
+
+##### Confirm that mtu did increase using
+Romeo, Juliet, and/or Router:
+```
+ifconfig | grep mtu
 ```
 
 ## Validating results and measuring BW
