@@ -96,13 +96,6 @@ Romeo: [4]
 sudo sysctl -w net.ipv4.tcp_timestamps=0  
 ```
 
-### Ping 
-
-Romeo: (sending 5000 packets with 200ms in between each) [3] 
-```
-ping juliet -c 5000 -i 0.2
-```
-
 ### If you are running the MSS=4312B case, increase mtu 
 Current MTU is 1500B, 20B are consumed by IP header and 20B by TCP header, that’s why max mss is 1460B (with disabled tcp timestamps option). Increase MTU (Maximum Transmission Unit), which is the maximum size of the packet that can be transmitted from a network interface, to allow for MSS=4312B. Considering the 40B consumed by headers and assuming disabled timestamps, we will need MTU=4352B (4312+40).
 
@@ -129,6 +122,13 @@ sudo ifconfig ens7 mtu 4352 up
 sudo ifconfig ens8 mtu 4352 up
 ```
 
+
+### Ping 
+
+Romeo: (sending 5000 packets with 200ms in between each) [3] 
+```
+ping juliet -c 5000 -i 0.2
+```
 
 ### Using iperf3 with continuous ss-output file 
 we will only be looking at the last line in the ss-output txt file since it summarizes all data transmitted in experiment run
