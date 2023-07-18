@@ -89,7 +89,10 @@ sudo apt-get update
 sudo apt-get -y install iperf3  
 ```
 
-### Before you start the first experiment, disable TCP timestamps option, which consumes 12 bytes from what we set mss to
+## Hidden settings to set accurate MSS
+Current MTU (Maximum Transmission Unit), which is the maximum size of the packet that can be transmitted from a network interface, is 1500 Bytes (B). 20B are consumed by IP header, 20B by TCP header, and 12B by the TCP timestamps option. That's why if you set MSS to any value greater than or equal to 1448B, you will always get MSS=1448B (MTU=1500B, 1500-20-20-12=1448B).
+
+### If you are running the MSS=1460B or MSS=4312B case, disable TCP timestamps option, which consumes 12 bytes from what we set mss to
 
 Romeo: [4] 
 ```
@@ -97,7 +100,7 @@ sudo sysctl -w net.ipv4.tcp_timestamps=0
 ```
 
 ### If you are running the MSS=4312B case, increase mtu 
-Current MTU is 1500B, 20B are consumed by IP header and 20B by TCP header, that’s why max mss is 1460B (with disabled tcp timestamps option). Increase MTU (Maximum Transmission Unit), which is the maximum size of the packet that can be transmitted from a network interface, to allow for MSS=4312B. Considering the 40B consumed by headers and assuming disabled timestamps, we will need MTU=4352B (4312+40).
+Considering the 40B consumed by headers and assuming disabled timestamps, we will need MTU=4352B (4312+40).
 
 ##### Check the current mtu value using
 ```
@@ -122,6 +125,7 @@ sudo ifconfig ens7 mtu 4352 up
 sudo ifconfig ens8 mtu 4352 up
 ```
 
+## Validating results and measuring BW
 
 ### Ping 
 
@@ -253,7 +257,7 @@ ping -c 10 10.10.1.100
 
 ~Similarly, if there is any extra delay on the juliet-router path, run the same commands above but using iface_1 and 10.10.2.100
 
-###  It is normal for the receiver BW to be slightly smaller
+###  It is normal for the receiver BW to be slightly smaller than sender BW
 The throughput is "data sent/time". 
 The sender considers "time" to be "time from connection start, to time I sent last bit". 
 The receiver considers "time" to be "time from connection start, to time I got the last bit"
