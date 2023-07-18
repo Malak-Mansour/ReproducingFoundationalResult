@@ -73,6 +73,11 @@ Romeo:
 ```
 sudo apt-get update  
 sudo apt-get -y install iperf3  
+```
+
+Install moreutils to use certain functions later on.
+Romeo:
+```
 sudo apt-get -y install moreutils r-base-core r-cran-ggplot2 r-cran-littler
 sudo sysctl -w net.ipv4.tcp_no_metrics_save=1  
 ```
@@ -86,14 +91,14 @@ sudo apt-get -y install iperf3
 
 ### Before you start the first experiment, disable TCP timestamps option, which consumes 12 bytes from what we set mss to
 
-Romeo_2: [4] 
+Romeo: [4] 
 ```
 sudo sysctl -w net.ipv4.tcp_timestamps=0  
 ```
 
-### Ping [3] 
+### Ping 
 
-Romeo: (sending 5000 packets with 200ms in between each)
+Romeo: (sending 5000 packets with 200ms in between each) [3] 
 ```
 ping juliet -c 5000 -i 0.2
 ```
