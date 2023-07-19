@@ -27,36 +27,36 @@ Here are some methodological issues that were only discovered upon reproducing r
 
 1. The number of data points/trials to run
 
-Solution: counted the points in Figure 3 to be 60
+**Solution:** counted the points in Figure 3 to be 60
 
 2. Choosing which five RTT values to take between 3 and 300ms since no details were given about the exact values
 
-Solution: chose 5 values that are equally apart: 3, 77.25, 151.5, 225.75, and 300 ms
+**Solution:** chose 5 values that are equally apart: 3, 77.25, 151.5, 225.75, and 300 ms
 
 3. The randomness in the choice of packet loss values uniformly distributed in log(p) between  0.00003 and  0.3
 
-Solution: 60 total points, 3 MSS, and 5 rtt, leaves 4 points for p. Also, figure 3 has packet loss on its x axis, so we have many values of p. Therefore, for every combination of MSS and delay, we generated 4 uniformly distributed values between 0.00003 and 0.3
+**Solution:** 60 total points, 3 MSS, and 5 rtt, leaves 4 points for p. Also, figure 3 has packet loss on its x axis, so we have many values of p. Therefore, for every combination of MSS and delay, we generated 4 uniformly distributed values between 0.00003 and 0.3
 
 4. Validating packet loss to make sure p-value matches the description of p in the paper: it didn't match the description, and that showed when our experimental BandWidth was off by 2 orders of magnitude.
 
-Solution: Multiply p by 100 to express in % (eg. p=0.3 is 30%)
+**Solution:** Multiply p by 100 to express in % (eg. p=0.3 is 30%)
 
 5. Selecting appropriate duration: no loss with low p because not enough duration
 
-Solution: increase duration from 60s to 240s
+**Solution:** increase duration from 60s to 240s
 
 6. For 1460 byte mss (and 4312 bytes), the actual mss is 12 bytes less than expected 
 
-Solution: Disable TCP timestamps option with a sysctl command
+**Solution:** Disable TCP timestamps option with a sysctl command
 
 7. For 4312 byte mss, we run into the limit of MTU
 
-Solution: Need to increase interface MTU (e.g. with ifconfig)
+**Solution:** Need to increase interface MTU (e.g. with ifconfig)
 
 
 8. Confusion arises about whether a wrong result (experimental BW being too different from model BW) is only an outlier or an experimental error, and if the trial should be run again.
 
-Solution: We have to validate our experiments using ping (sends many packets) and generate an ss-output file to validate that our settings are correct by confirming the parameter values. 
+**Solution:** We have to validate our experiments using ping (sends many packets) and generate an ss-output file to validate that our settings are correct by confirming the parameter values. 
 
 If it is an experimental error and we have mistakenly set something wrong, then we can repeat the trial and set the correct parameters. 
 
@@ -64,6 +64,9 @@ Otherwise, if for example not enough packets have been sent to even see a packet
 
 If both of these have been done and still the results are not exactly as expected, then it is probably an outlier, which is okay to exist!
 
+9. Since this is a queueless environment, we have to make sure that a queue doesn't form: rtt is not much larger than minrtt. To ensure that we picked a bottleneck link rate that is greater than the maximum model BW: max model BW was 2e8 so we picked bottleneck link rate = 1Gbit/s. However, after many trial runs, we noticed a few queue formations (rtt>>minrtt)
+
+**Solution:** We increased the bottleneck link rate to be greater than the maximum model BW by 3 times since the experiment BW to model BW ratio could go up to approximately 2.5. The maximum BW in the plot is around 2e8 bits/s, so we will set the bottleneck link rate to 3Gbit/s.
 
 
 ## Parameter values
@@ -78,7 +81,7 @@ One-way delay takes the following values 3, 77.25, 151.5, 225.75, and 300 ms. MS
 Here is a google sheet with my 60 trials for your reference: https://docs.google.com/spreadsheets/d/1vfvR07gic8oynpdxMrSt_JkWlNSyXOmwcM6QkL_JecY/edit 
 
 ## Bottleneck link rate
-First, we don't want a queue to form. Check the maximum BW in Figure 3 of the paper. If we don't want a queue to form, then the bottleneck link rate must be greater than the maximum possible BW. The maximum BW in the plot is around 2e8 bits/s, so we will set the bottleneck link rate to 1Gbit with  0.1GB buffer on both sides of the router (towards romeo and towards juliet)
+First, we don't want a queue to form. Check the maximum BW in Figure 3 of the paper. If we don't want a queue to form, then the bottleneck link rate must be greater than the maximum model BW by 3 times since the experiment BW to model BW ratio could go up to 2.5. The maximum BW in the plot is around 2e8 bits/s, so we will set the bottleneck link rate to 3Gbit with  0.1GB buffer on both sides of the router (towards romeo and towards juliet).
 
 ![image](https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/25700a2f-5861-4e8e-b7dd-083d72e475d5)
 
