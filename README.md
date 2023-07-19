@@ -107,7 +107,7 @@ sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem delay 3ms loss 15.6628
 
 ### Install iperf3 on Romeo and Juliet [3]
 
-Romeo:
+Romeo and Juliet:
 
 ```
 sudo apt-get update  
@@ -121,12 +121,6 @@ sudo apt-get -y install moreutils r-base-core r-cran-ggplot2 r-cran-littler
 sudo sysctl -w net.ipv4.tcp_no_metrics_save=1  
 ```
 
-Juliet:
-
-```
-sudo apt-get update  
-sudo apt-get -y install iperf3  
-```
 
 ## Hidden settings to set accurate MSS
 Current MTU (Maximum Transmission Unit), which is the maximum size of the packet that can be transmitted from a network interface, is 1500 Bytes (B). 20B are consumed by IP header, 20B by TCP header, and 12B by the TCP timestamps option. That's why if you set MSS to any value greater than or equal to 1448B, you will always get MSS=1448B (MTU=1500B, 1500-20-20-12=1448B).
