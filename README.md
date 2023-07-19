@@ -175,7 +175,7 @@ ping juliet -c 5000 -i 0.2
 ```
 
 ##### Data to look at:
-1. min and avg rtt (that avg rtt is not much larger than min rtt, otherwise a queue would have formed)
+1. min and avg rtt (that they match what you set delay to)
 
 2. packet loss (that it matches what you set it to- percentage value)
 
@@ -248,13 +248,13 @@ ping juliet -c **5000** -i 0.2
 ```
 
 ##### Data to look at:
-1. min and avg rtt (that avg rtt is not much larger than min rtt, otherwise a queue would have formed)
+1. min and avg rtt (that they match what you set delay to)
 
 2. packet loss (that it matches what you set it to- percentage value)
 
 
-### Using iperf3 with continuous ss-output file 
-we will only be looking at the last line in the ss-output txt file since it summarizes all data transmitted in experiment run the following simultaneously.
+### Using iperf3 with continuous ss-output file
+we will only be looking at the last line in the ss-output txt file since it summarizes all data transmitted in the experiment run the following simultaneously.
 
 Juliet: [3]
 ```
