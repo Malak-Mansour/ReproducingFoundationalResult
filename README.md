@@ -297,6 +297,12 @@ ss-output:
 
 
 # Possible fixes
+
+### Finding the name of your network interface (mine was ens7)
+```
+ifconfig -a
+```
+
 ### If you're getting weird results in your validation steps (ping or ss-output), here are some things to do to check where the problem is. 
 
 If you changed the delay, on the romeo or juliet ends, then your network topology would be wrong because this is how it should look like:
