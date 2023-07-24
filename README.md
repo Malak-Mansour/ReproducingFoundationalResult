@@ -53,13 +53,18 @@ This is the network topology
 ### 3. Bottleneck link rate
 We don't want a queue to form since this is a queueless random packet loss experiment. Therefore, the bottleneck link rate must be greater than the maximum model BW. Check the maximum BW in Figure 3 of the paper: it is around 2e8 bits/s, so we will set the bottleneck link rate to 1Gbit with 0.1GB buffer on both sides of the router (towards romeo and towards juliet).
 
-Now run trial 7 by following the instructions in the section titled 'First environment runs' of this document. Add two columns to the excel sheet table called 'experiment BW' and 'experiment/model BW ratio', and record the experiment BW that you get from the run. Notice that the ratio is nearly 3. 
-Now run trial 8 by following the same instructions. Notice that the model BW is 10^8, which is close to what we set the bottleneck link rate to, 1Gbit. So it is possible that with a ratio that can go up to 3, the experiment BW will exceed what you set the bottleneck link rate to, and a queue will form (queue = rtt>>minrtt). So, what we can do is set the bottleneck link rate to 3Gbit.
+Now run trial 7 by following the instructions in the section titled 'First environment runs' of this document. Add two columns to the excel sheet table called 'experiment BW' and 'experiment/model BW ratio', and record the experiment BW that you get from the run. 
+
+### 4. Experimental BW Validation (hint: look at packet loss)
+In the experiment BW from trial 7, did you notice it may have been higher than the model BW by 10, which is a lot. If that is the case, look again at what you set the packet loss to. The packet loss setting in the router takes p in %, meanwhile p that we have in our trial combinations is a scientific number. Now correct p in your parameter setting on JupyterLab so that when for example p=0.3, you set it as 30% in the router. You can add a column beside p in your excel table that has all p values multiplied by 100 to be used in the router settings directly.
+After you've re-ran trial 7 again with the new higher p value, confirm that experimental/model BW ratio is much lower than 10. For trial 7 specifically, you will see that it goes up to nearly 3 (we will use this information to discover methodological issue #5). 
+
+### 5. High Model BW could form a queue
+Now run trial 8 by following the same instructions. Notice that the model BW is 10^8, which is close to what we set the bottleneck link rate to, 1Gbit. So it is possible that with a ratio that can go up to 3 like in trial 7, the experiment BW will exceed what you set the bottleneck link rate to, and a queue will form (queue is when rtt>>minrtt). So, what we can do is increase the bottleneck link rate to 3Gbit.
 
 ![image](https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/25700a2f-5861-4e8e-b7dd-083d72e475d5)
 
-###
-When validatg p usimg ping,
+
 
 # First environment runs
 We now want to start running the 60 trials from the first environment. We will start with 20 trials corresponding to the 1460 Bytes MSS case (will do 4312 and 536 Bytes cases after). 
