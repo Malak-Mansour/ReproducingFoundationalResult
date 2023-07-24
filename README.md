@@ -44,7 +44,7 @@ Generate on Excel/Google Sheets 60 points with those 3 parameters, and number ea
 Here is a google sheet with my 60 trials for your reference: https://docs.google.com/spreadsheets/d/1vfvR07gic8oynpdxMrSt_JkWlNSyXOmwcM6QkL_JecY/edit 
 
 
-### Network topology
+#### Network topology
 This is the network topology
 
 ![image](https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/b300d43c-7884-468e-9782-6ec439dadae0)
@@ -55,22 +55,168 @@ We don't want a queue to form since this is a queueless random packet loss exper
 
 ![image](https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/25700a2f-5861-4e8e-b7dd-083d72e475d5)
 
-Now run trial 7 by following the instructions in the section titled 'First environment runs' of this document. Add two columns to the excel sheet table called 'experiment BW' and 'experiment/model BW ratio', and record the experiment BW that you get from the run. 
+Now run trial 7 by following the instructions below. Add two columns to the excel sheet table called 'experiment BW' and 'experiment/model BW ratio', and record the experiment BW that you get from the run. 
 
-### 4. Experimental BW Validation (hint: look at packet loss)
-In the experiment BW from trial 7, did you notice it may have been higher than the model BW by 10, which is a lot. If that is the case, look again at what you set the packet loss to. The packet loss setting in the router takes p in %, meanwhile p that we have in our trial combinations is a scientific number. Now correct p in your parameter setting on JupyterLab so that when for example p=0.3, you set it as 30% in the router. You can add a column beside p in your excel table that has all p values multiplied by 100 to be used in the router settings directly.
-After you've re-ran trial 7 again with the new higher p value, confirm that experimental/model BW ratio is much lower than 10. For trial 7 specifically, you will see that it goes up to nearly 3 (we will use this information to discover methodological issue #5). 
+##### Set parameters on router
 
-### 5. High Model BW could form a queue
+Router:
+
+```
+iface_0=$(ip route get 10.10.1.100 | grep -oP "(?<=dev )[^ ]+")
+sudo tc qdisc del dev $iface_0 root
+sudo tc qdisc add dev $iface_0 root netem delay 3ms 
+iface_1=$(ip route get 10.10.2.100 | grep -oP "(?<=dev )[^ ]+")
+sudo tc qdisc del dev $iface_1 root
+sudo tc qdisc add dev $iface_1 root handle 1: htb default 3
+sudo tc class add dev $iface_1 parent 1: classid 1:3 htb rate 1Gbit
+sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem delay 3ms loss 0.005730706937% limit 100MB
+```
+
+
+##### Install iperf3 on Romeo and Juliet [3]
+
+Romeo and Juliet:
+
+```
+sudo apt-get update  
+sudo apt-get -y install iperf3  
+```
+
+##### Install moreutils to use certain functions later on
+
+Romeo:
+```
+sudo apt-get -y install moreutils r-base-core r-cran-ggplot2 r-cran-littler
+sudo sysctl -w net.ipv4.tcp_no_metrics_save=1  
+```
+
+
+##### Validating results and measuring BW
+
+###### 4. Ping packets 
+To calculate how many ping packets we should send to see at least one packet loss and validate p, let's look at how the paper defines p. 
+
+![image](https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/7183a5b5-7ded-41eb-b122-65daecffc073)
+
+
+Round up 1/p and multiply it by 3 or so. Packet loss is random, so we will not actually know exactly when a loss will happen, that's why we overestimate the packets to be sent. If you set a value for ping packets but the packet losses from the ping run are much lower than expected, you probably need to send more packets!
+
+For trial 7, 1/p=1/0.005730706937=174.498541104, so we should send at least 500 packets.
+
+Romeo: (sending 500 packets with 200ms in between each) [3] 
+```
+ping juliet -c 500 -i 0.2
+```
+
+###### Data to look at:
+1. min and avg rtt (that they match what you set delay to)
+
+2. packet loss (that it matches what you set it to- percentage value)
+
+
+###### Using iperf3 with continuous ss-output file 
+We will only be looking at the last line in the ss-output txt file since it summarizes all data transmitted in the experiment. Run the following instructions simultaneously.
+
+###### 5. Duration of iperf
+We should decide on the duration of iperf beforehand. Start with any value that makes sense to you initially. For example, check if 60 seconds is enough to send enough packets, see a packet loss, and validate the results that you are expecting- especially when you have a low enough packet loss value. If you do not see that 60s is enough, try again with 120s, and go up to 240s if needed, which is what we are using in the following code.
+
+
+Juliet: [3]
+```
+iperf3 -s  -1  
+```
+
+While that is running, paste the following in one Romeo terminal, 
+Romeo_1: [3]
+```
+wget -O ss-output.sh https://raw.githubusercontent.com/ffund/tcp-ip-essentials/gh-pages/scripts/ss-output.sh
+bash ss-output.sh 10.10.2.100  
+```
+
+While that is running, paste the following in the other Romeo terminal, 
+Romeo_2: [2] (240s duration, TCP reno, MSS 1460)
+```
+iperf3 -c juliet -t 240 -C reno -M 1460
+```
+
+When the process in Romeo_2 is done, bash will also stop running, but the process will not close, so you need to close it manually using ctrl+C. Then paste the following to see the output with tcp reno, 
+Romeo_1: [3]
+```
+cat sender-ss.txt | grep "reno"
+```
+
+###### 6. TCP timestamps option
+Look at the mss value, notice how it is 1448 when you set it to 1460. This is because 12 bytes are consumed by the TCP timestamps option. So to disable it we can do the following.
+
+
+Romeo: [4] 
+```
+sudo sysctl -w net.ipv4.tcp_timestamps=0  
+```
+
+
+Now re-run the trial again:
+
+##### Validating results and measuring BW
+
+###### Ping 
+
+Romeo: (sending 500 packets with 200ms in between each) [3] 
+```
+ping juliet -c 500 -i 0.2
+```
+
+###### Data to look at:
+1. min and avg rtt (that they match what you set delay to)
+
+2. packet loss (that it matches what you set it to- percentage value)
+
+
+###### Using iperf3 with continuous ss-output file 
+
+Juliet: [3]
+```
+iperf3 -s  -1  
+```
+
+While that is running, paste the following in one Romeo terminal, 
+Romeo_1: [3]
+```
+wget -O ss-output.sh https://raw.githubusercontent.com/ffund/tcp-ip-essentials/gh-pages/scripts/ss-output.sh
+bash ss-output.sh 10.10.2.100  
+```
+
+While that is running, paste the following in the other Romeo terminal, 
+Romeo_2: [2] (240s duration, TCP reno, MSS 1460)
+```
+iperf3 -c juliet -t 240 -C reno -M 1460
+```
+
+When the process in Romeo_2 is done, bash will also stop running, but the process will not close, so you need to close it manually using ctrl+C. Then paste the following to see the output with tcp reno, 
+Romeo_1: [3]
+```
+cat sender-ss.txt | grep "reno"
+```
+
+##### Data to look at:
+iperf:
+
+BandWidth: compare it to model BW, you can find the ratio of experimental BW to model BW
+
+
+ss-output:
+
+1. min and avg rtt (that avg rtt is not much larger than min rtt, otherwise a queue would have formed)
+
+2. retrans and data_segs_out: packet loss=retrans/data_segs_out (that it matches what you set it to- not the percentage value)
+
+
+### 7. Experimental BW Validation (hint: look at packet loss %)
+In the experiment BW from trial 7, did you notice it may have been higher than the model BW by 10, which is a lot? If that is the case, look again at what you set the packet loss to. The packet loss setting in the router takes p in %, meanwhile, p that we have in our trial combinations is a scientific number. Now correct p in your parameter setting on JupyterLab so that when for example p=0.3, you set it as 30% in the router. You can add a column beside p in your excel table that has all p values multiplied by 100 to be used in the router settings directly.
+After you've re-run trial 7 again with the new higher p value, confirm that experimental/model BW ratio is much lower than 10. For trial 7 specifically, you will see that it goes up to nearly 3 (we will use this information to discover methodological issue #5). 
+
+### 8. High Model BW could form a queue
 Now run trial 8 by following the same instructions. Notice that the model BW is 10^8, which is close to what we set the bottleneck link rate to, 1Gbit. So it is possible that with a ratio that can go up to 3 like in trial 7, the experiment BW will exceed what you set the bottleneck link rate to, and a queue will form (queue is when rtt>>minrtt). So, what we can do is increase the bottleneck link rate to 3Gbit.
-
-
-
-# First environment runs
-We now want to start running the 60 trials from the first environment. We will start with 20 trials corresponding to the 1460 Bytes MSS case (will do 4312 and 536 Bytes cases after). 
-
-
-## Code that takes the methodological issues into consideration:
 
 ### Setup delay and loss on router
 Router:
@@ -103,49 +249,6 @@ sudo apt-get -y install moreutils r-base-core r-cran-ggplot2 r-cran-littler
 sudo sysctl -w net.ipv4.tcp_no_metrics_save=1  
 ```
 
-
-## Hidden settings to set accurate MSS
-Current MTU (Maximum Transmission Unit), which is the maximum size of the packet that can be transmitted from a network interface, is 1500 Bytes (B). 20B are consumed by IP header, 20B by TCP header, and 12B by the TCP timestamps option. That's why if you set MSS to any value greater than or equal to 1448B, you will always get MSS=1448B (MTU=1500B, 1500-20-20-12=1448B).
-
-### If you are running the MSS=1460B or MSS=4312B case, disable TCP timestamps option, which consumes 12 bytes from what we set mss to
-
-Romeo: [4] 
-```
-sudo sysctl -w net.ipv4.tcp_timestamps=0  
-```
-
-### If you are running the MSS=4312B case, increase mtu 
-Considering the 40B consumed by headers and assuming disabled timestamps, we will need MTU=4352B (4312+40).
-
-##### You can check the current mtu value using
-Romeo, Juliet, and/or Router:
-```
-ifconfig | grep mtu
-```
-
-
-##### Increase the MTU on the experiment interface of romeo and juliet
-
-Romeo and Juliet: [5]
-```
-sudo ifconfig ens7 mtu 4352 up
-```
-
-
-##### Increase the MTU on both of the experiment interfaces on the router
-
-Router: [5]
-
-```
-sudo ifconfig ens7 mtu 4352 up
-sudo ifconfig ens8 mtu 4352 up
-```
-
-##### Confirm that mtu did increase using
-Romeo, Juliet, and/or Router:
-```
-ifconfig | grep mtu
-```
 
 ## Validating results and measuring BW
 
@@ -202,9 +305,53 @@ ss-output:
 2. retrans and data_segs_out: packet loss=retrans/data_segs_out (that it matches what you set it to- not the percentage value)
 
 
+### 9. 4312 B cases
+Now let's run trial 9, with 4312B mss value. Notice how mss comes out as 1460B in the ss-output even after you've disabled TCP timestamps option and set mss to 4312 when you ran iperf. This is because of the MTU.
+
+Current MTU (Maximum Transmission Unit), which is the maximum size of the packet that can be transmitted from a network interface, is 1500 Bytes (B). 20B are consumed by IP header, 20B by TCP header, and 12B by the TCP timestamps option. That's why if you set MSS to any value greater than or equal to 1448B, you will always get MSS=1448B (MTU=1500B, 1500-20-20-12=1448B).
+
+
+If you are running the MSS=4312B case, increase mtu.
+
+Considering the 40B consumed by headers and assuming disabled timestamps, we will need MTU=4352B (4312+40).
+
+##### You can check the current mtu value using
+Romeo, Juliet, and/or Router:
+```
+ifconfig | grep mtu
+```
+
+
+##### Increase the MTU on the experiment interface of romeo and juliet
+
+Romeo and Juliet: [5]
+```
+sudo ifconfig ens7 mtu 4352 up
+```
+
+
+##### Increase the MTU on both of the experiment interfaces on the router
+
+Router: [5]
+
+```
+sudo ifconfig ens7 mtu 4352 up
+sudo ifconfig ens8 mtu 4352 up
+```
+
+##### Confirm that mtu did increase using
+Romeo, Juliet, and/or Router:
+```
+ifconfig | grep mtu
+```
+
+Now re-run trial 9 again and confirm that mss does come out as 4312B in the ss-output.
+
 
 # Code for remaining trials
-For the each trial, do the following. Change the parameters in **bold** (or surrounded by 2 asterisks '** **') depending on each trial's settings.
+We now want to start running the 60 trials from the first environment. We will start with 20 trials corresponding to the 1460 Bytes MSS case, then do 4312 and 536 Bytes cases after. 
+
+For each trial, do the following. Change the parameters in **bold** (or surrounded by 2 asterisks '** **') depending on each trial's settings.
 
 Router:
 
@@ -276,13 +423,22 @@ ss-output:
 
 
 # Possible fixes
+We have to validate our experiments using ping (sends many packets) and generate an ss-output file to validate that our settings are correct by confirming the parameter values. 
 
-### Finding the name of your network interface (mine was ens7)
+If it is an experimental error and we have mistakenly set something wrong, then we can repeat the trial and set the correct parameters. 
+
+Otherwise, if for example not enough packets have been sent to even see a packet loss or a queue formed, then we can increase the duration or number of packets for **all** trials to have a fixed setting for all! Don’t repeat experiments just because of unusual results because we would be “forcing results” and “throwing out data”. 
+
+If both of these have been done and still the results are not exactly as expected, then it is probably an outlier, which is okay to exist!
+
+
+### 1. Finding the name of your network interface (mine was ens7)
 ```
 ifconfig -a
 ```
 
-### If you're getting weird results in your validation steps (ping or ss-output), here are some things to do to check where the problem is. 
+### 2. Experimental error (undo incorrect parameter settings)
+If you're getting weird results in your validation steps (ping or ss-output), here are some things to do to check where the problem is. 
 
 If you changed the delay, on the romeo or juliet ends, then your network topology would be wrong because this is how it should look like:
 ![image](https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/18bb6ce4-810b-42f8-81e0-34637d25755c)
@@ -330,7 +486,7 @@ ping -c 10 10.10.1.100
 
 ~Similarly, if there is any extra delay on the juliet-router path, run the same commands above but using iface_1 and 10.10.2.100
 
-###  It is normal for the receiver BW to be slightly smaller than sender BW
+###  3. It is normal for the receiver BW to be slightly smaller than sender BW
 The throughput is "data sent/time". 
 The sender considers "time" to be "time from connection start, to time I sent last bit". 
 The receiver considers "time" to be "time from connection start, to time I got the last bit"
