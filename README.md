@@ -17,75 +17,49 @@ The paper's primary purpose is to
 2. Validate this foundational result through three primary network environments: Queueless Random Packet Loss, Environments with Queueing (not random), Effect of TCP Implementation.
 
 # First Environment Setup
-In this document, we are focusing on reproducing results from the first environment: Queueless Random Packet Loss. In this environment, they validated the BW-predicting model by measuring BW under the assumption that no queue is formed and packet losses are random. The foundational result that we are validating involves varying three parameters (Delay, MSS, packet loss (p)) to produce BW. 
+In this document, we are focusing on reproducing results from the first environment: Queueless Random Packet Loss. In this environment, they validated the BW-predicting model by measuring BW under the assumption that no queue is formed and packet losses are random. The foundational result that we are validating involves varying three parameters (Delay/RTT, MSS, packet loss (p)) to produce BW. 
 
 <img width="272" alt="image" src="https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/e04ea6f0-1a89-4e6b-94ee-d68323bbe4dd">
 
 
 ## Methodological issues
-Here are some methodological issues that were only discovered upon reproducing research:
-
-1. The number of data points/trials to run
-
-**Solution:** counted the points in Figure 3 to be 60
-
-2. Choosing which five RTT values to take between 3 and 300ms since no details were given about the exact values
-
-**Solution:** chose 5 values that are equally apart: 3, 77.25, 151.5, 225.75, and 300 ms
-
-3. The randomness in the choice of packet loss values uniformly distributed in log(p) between  0.00003 and  0.3
-
-**Solution:** 60 total points, 3 MSS, and 5 rtt, leaves 4 points for p. Also, figure 3 has packet loss on its x axis, so we have many values of p. Therefore, for every combination of MSS and delay, we generated 4 uniformly distributed values between 0.00003 and 0.3
-
-4. Validating packet loss to make sure p-value matches the description of p in the paper: it didn't match the description, and that showed when our experimental BandWidth was off by 2 orders of magnitude.
-
-**Solution:** Multiply p by 100 to express in % (eg. p=0.3 is 30%)
-
-5. Selecting appropriate duration: no loss with low p because not enough duration
-
-**Solution:** increase duration from 60s to 240s
-
-6. For 1460 byte mss (and 4312 bytes), the actual mss is 12 bytes less than expected 
-
-**Solution:** Disable TCP timestamps option with a sysctl command
-
-7. For 4312 byte mss, we run into the limit of MTU
-
-**Solution:** Need to increase interface MTU (e.g. with ifconfig)
+Let's run the experiment naively and discover the methodological issues by reproducing the research.
 
 
-8. Confusion arises about whether a wrong result (experimental BW being too different from model BW) is only an outlier or an experimental error, and if the trial should be run again.
-
-**Solution:** We have to validate our experiments using ping (sends many packets) and generate an ss-output file to validate that our settings are correct by confirming the parameter values. 
-
-If it is an experimental error and we have mistakenly set something wrong, then we can repeat the trial and set the correct parameters. 
-
-Otherwise, if for example not enough packets have been sent to even see a packet loss or a queue formed, then we can increase the duration or number of packets for **all** trials to have a fixed setting for all! Don’t repeat experiments just because of unusual results because we would be “forcing results” and “throwing out data”. 
-
-If both of these have been done and still the results are not exactly as expected, then it is probably an outlier, which is okay to exist!
-
-9. Since this is a queueless environment, we have to make sure that a queue doesn't form: rtt is not much larger than minrtt. To ensure that we picked a bottleneck link rate that is greater than the maximum model BW: max model BW was 2e8 so we picked bottleneck link rate = 1Gbit/s. However, after many trial runs, we noticed a few queue formations (rtt>>minrtt)
-
-**Solution:** We increased the bottleneck link rate to be greater than the maximum model BW by 3 times since the experiment BW to model BW ratio could go up to approximately 2.5. The maximum BW in the plot is around 2e8 bits/s, so we will set the bottleneck link rate to 3Gbit/s.
+### 1. Trial combinations table
+It is good to quantize and organize your data in a spreadsheet to know what trials you are running with what parameter settings. Since the first environment is quantized in Figures 3 and 4 of the paper, count the points in Figure 3 to find how many data points of BW (trials) we should have- it will be 60.
 
 
-## Parameter values
-One-way delay takes the following values 3, 77.25, 151.5, 225.75, and 300 ms. MSS takes 536, 1460, and 4312 bytes. Sine Figure 3 has approximately 60 points in total, we conclude that the number of uniformly distributed values of packet loss (in log(p)) are 4: 5 delay * 3 MSS * 4 p = 60 BW points). For every combination of MSS and delay, generate 4 uniformly distributed values of p between 0.00003 and 0.3. Generate on excel 60 points with those parameters, and number each trial.
+### 2. Parameter values
+As mentioned before, each of the 60 trials is a combination of Delay/RTT, MSS, and packet loss (p) to calculate BW using the model and compare it to the experimental BW. 
+###### MSS
+There are 3 MSS values: 526 bytes (B), 1460 B, 4312 B.
+###### RTT/delay
+There are 5 RTT values between 3 and 300ms, but no further details are given. One approach is to choose 5 values that are equally apart: 3, 77.25, 151.5, 225.75, and 300 ms. 
+###### Packet loss (p)
+Packet loss values are uniformly distributed in log(p) between  0.00003 and  0.3. Since we have 60 points in total, 3 MSS values, and 5 RTT values, 60/(3*5)=4, this leaves 4 points for p. Figure 3 has packet loss on its x-axis, so p is not just 4 discrete values. For every combination of MSS and delay, we should generate 4 uniformly distributed values between 0.00003 and 0.3
 
-## This is the network topology
+
+Generate on Excel/Google Sheets 60 points with those 3 parameters, and number each trial. Calculate the model BW using the model (equation 3). To verify your choice of parameter values, you can plot the model BW against itself and confirm that the range of BW values on the x and y axes matches that from Figure 3 (min:5e4, max:2e8). Similarly, calculate BW*RTT/MSS vs p to confirm the range of values in figure 4 (min:0.0002, max:0.2). Plot in log scale. 
+Here is a google sheet with my 60 trials for your reference: https://docs.google.com/spreadsheets/d/1vfvR07gic8oynpdxMrSt_JkWlNSyXOmwcM6QkL_JecY/edit 
+
+
+### Network topology
+This is the network topology
 
 ![image](https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/b300d43c-7884-468e-9782-6ec439dadae0)
 
 
-## 60 trials table
-Here is a google sheet with my 60 trials for your reference: https://docs.google.com/spreadsheets/d/1vfvR07gic8oynpdxMrSt_JkWlNSyXOmwcM6QkL_JecY/edit 
+### 3. Bottleneck link rate
+We don't want a queue to form since this is a queueless random packet loss experiment. Therefore, the bottleneck link rate must be greater than the maximum model BW. Check the maximum BW in Figure 3 of the paper: it is around 2e8 bits/s, so we will set the bottleneck link rate to 1Gbit with 0.1GB buffer on both sides of the router (towards romeo and towards juliet).
 
-## Bottleneck link rate
-First, we don't want a queue to form. Check the maximum BW in Figure 3 of the paper. If we don't want a queue to form, then the bottleneck link rate must be greater than the maximum model BW by 3 times since the experiment BW to model BW ratio could go up to 2.5. The maximum BW in the plot is around 2e8 bits/s, so we will set the bottleneck link rate to 3Gbit with  0.1GB buffer on both sides of the router (towards romeo and towards juliet).
+Now run trial 7 by following the instructions in the section titled 'First environment runs' of this document. Add two columns to the excel sheet table called 'experiment BW' and 'experiment/model BW ratio', and record the experiment BW that you get from the run. Notice that the ratio is nearly 3. 
+Now run trial 8 by following the same instructions. Notice that the model BW is 10^8, which is close to what we set the bottleneck link rate to, 1Gbit. So it is possible that with a ratio that can go up to 3, the experiment BW will exceed what you set the bottleneck link rate to, and a queue will form (queue = rtt>>minrtt). So, what we can do is set the bottleneck link rate to 3Gbit.
 
 ![image](https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/25700a2f-5861-4e8e-b7dd-083d72e475d5)
 
-
+###
+When validatg p usimg ping,
 
 # First environment runs
 We now want to start running the 60 trials from the first environment. We will start with 20 trials corresponding to the 1460 Bytes MSS case (will do 4312 and 536 Bytes cases after). 
