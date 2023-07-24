@@ -92,6 +92,7 @@ sudo sysctl -w net.ipv4.tcp_no_metrics_save=1
 
 
 ##### Validating results and measuring BW
+To  validate our trial settings and results, we run two validation steps: ping and ss-output simultaneously with iperf.
 
 ###### 4. Ping packets 
 To calculate how many ping packets we should send to see at least one packet loss and validate p, let's look at how the paper defines p. 
@@ -145,8 +146,8 @@ Romeo_1: [3]
 cat sender-ss.txt | grep "reno"
 ```
 
-###### 6. TCP timestamps option
-Look at the mss value, notice how it is 1448 when you set it to 1460. This is because 12 bytes are consumed by the TCP timestamps option. So to disable it we can do the following.
+### 6. TCP timestamps option
+Look at the mss value from the ss-output, notice how it is 1448 but you set it to 1460. This is because 12 bytes are consumed by the TCP timestamps option. So to disable it we can do the following.
 
 
 Romeo: [4] 
@@ -154,16 +155,59 @@ Romeo: [4]
 sudo sysctl -w net.ipv4.tcp_timestamps=0  
 ```
 
+### 7. Experimental BW Validation (hint: look at packet loss %)
+Additionally, look at the experiment BW from iperf, did you notice it may have been higher than the model BW by 10, which is a lot? If that is the case, look again at what you set the packet loss to. The packet loss setting in the router takes p in %, meanwhile, p that we have in our trial combinations is a scientific number. Now correct p in your parameter setting on JupyterLab so that when for example p=0.3, you set it as 30% in the router. You can add a column beside p in your excel table that has all p values multiplied by 100 to be used in the router settings directly.
 
-Now re-run the trial again:
+For trial 7 for example, this is what we can change to correct p (0.005730706937% will change to 0.5730706937%):
+
+Router:
+
+```
+iface_0=$(ip route get 10.10.1.100 | grep -oP "(?<=dev )[^ ]+")
+sudo tc qdisc del dev $iface_0 root
+sudo tc qdisc add dev $iface_0 root netem delay 3ms 
+iface_1=$(ip route get 10.10.2.100 | grep -oP "(?<=dev )[^ ]+")
+sudo tc qdisc del dev $iface_1 root
+sudo tc qdisc add dev $iface_1 root handle 1: htb default 3
+sudo tc class add dev $iface_1 parent 1: classid 1:3 htb rate 1Gbit
+sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem delay 3ms loss 0.5730706937% limit 100MB
+```
+
+
+This is the importance of the validation steps. They help us discover these unanticipated-for methodological issues.
+
+After you've re-run trial 7 again with the disabled TCP timestamps option and the new higher p value (multiply scientific p by 100 to get it in %), confirm that the mss value is 1460 and that the experimental/model BW ratio is much lower than 10. For trial 7 specifically, you will see that it goes up to nearly 3 (we will use this information to discover methodological issue #5). 
+
+
+### 8. High Model BW could form a queue
+Now run trial 8 by following the same instructions. Notice that the model BW is 10^8, which is close to what we set the bottleneck link rate to, 1Gbit. So it is possible that with a ratio that can go up to 3 like in trial 7, the experiment BW will exceed what you set the bottleneck link rate to, and a queue will form (queue is when rtt>>minrtt). So, what we can do is increase the bottleneck link rate to 3Gbit.
+
+
+
+Now re-run trial 8 again with a higher bottleneck link rate to avoid a queue from forming:
+
+##### Setup delay and loss on router
+Router:
+
+```
+iface_0=$(ip route get 10.10.1.100 | grep -oP "(?<=dev )[^ ]+")
+sudo tc qdisc del dev $iface_0 root
+sudo tc qdisc add dev $iface_0 root netem delay 3ms 
+iface_1=$(ip route get 10.10.2.100 | grep -oP "(?<=dev )[^ ]+")
+sudo tc qdisc del dev $iface_1 root
+sudo tc qdisc add dev $iface_1 root handle 1: htb default 3
+sudo tc class add dev $iface_1 parent 1: classid 1:3 htb rate 3Gbit
+sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem delay 3ms loss 0.0186147305% limit 100MB
+```
 
 ##### Validating results and measuring BW
 
 ###### Ping 
+roundup(1/p)=roundup(1/0.000186147305)=5373, so we can send 15000 ping packets
 
-Romeo: (sending 500 packets with 200ms in between each) [3] 
+Romeo: (sending 15000 packets with 200ms in between each) [3] 
 ```
-ping juliet -c 500 -i 0.2
+ping juliet -c 15000 -i 0.2
 ```
 
 ###### Data to look at:
@@ -182,7 +226,6 @@ iperf3 -s  -1
 While that is running, paste the following in one Romeo terminal, 
 Romeo_1: [3]
 ```
-wget -O ss-output.sh https://raw.githubusercontent.com/ffund/tcp-ip-essentials/gh-pages/scripts/ss-output.sh
 bash ss-output.sh 10.10.2.100  
 ```
 
@@ -211,98 +254,8 @@ ss-output:
 2. retrans and data_segs_out: packet loss=retrans/data_segs_out (that it matches what you set it to- not the percentage value)
 
 
-### 7. Experimental BW Validation (hint: look at packet loss %)
-In the experiment BW from trial 7, did you notice it may have been higher than the model BW by 10, which is a lot? If that is the case, look again at what you set the packet loss to. The packet loss setting in the router takes p in %, meanwhile, p that we have in our trial combinations is a scientific number. Now correct p in your parameter setting on JupyterLab so that when for example p=0.3, you set it as 30% in the router. You can add a column beside p in your excel table that has all p values multiplied by 100 to be used in the router settings directly.
-After you've re-run trial 7 again with the new higher p value, confirm that experimental/model BW ratio is much lower than 10. For trial 7 specifically, you will see that it goes up to nearly 3 (we will use this information to discover methodological issue #5). 
 
-### 8. High Model BW could form a queue
-Now run trial 8 by following the same instructions. Notice that the model BW is 10^8, which is close to what we set the bottleneck link rate to, 1Gbit. So it is possible that with a ratio that can go up to 3 like in trial 7, the experiment BW will exceed what you set the bottleneck link rate to, and a queue will form (queue is when rtt>>minrtt). So, what we can do is increase the bottleneck link rate to 3Gbit.
-
-### Setup delay and loss on router
-Router:
-
-```
-iface_0=$(ip route get 10.10.1.100 | grep -oP "(?<=dev )[^ ]+")
-sudo tc qdisc del dev $iface_0 root
-sudo tc qdisc add dev $iface_0 root netem delay 3ms 
-iface_1=$(ip route get 10.10.2.100 | grep -oP "(?<=dev )[^ ]+")
-sudo tc qdisc del dev $iface_1 root
-sudo tc qdisc add dev $iface_1 root handle 1: htb default 3
-sudo tc class add dev $iface_1 parent 1: classid 1:3 htb rate 1Gbit
-sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem delay 3ms loss 15.66283969% limit 100MB
-```
-
-
-### Install iperf3 on Romeo and Juliet [3]
-
-Romeo and Juliet:
-
-```
-sudo apt-get update  
-sudo apt-get -y install iperf3  
-```
-
-Install moreutils to use certain functions later on.
-Romeo:
-```
-sudo apt-get -y install moreutils r-base-core r-cran-ggplot2 r-cran-littler
-sudo sysctl -w net.ipv4.tcp_no_metrics_save=1  
-```
-
-
-## Validating results and measuring BW
-
-### Ping 
-
-Romeo: (sending 5000 packets with 200ms in between each) [3] 
-```
-ping juliet -c 5000 -i 0.2
-```
-
-##### Data to look at:
-1. min and avg rtt (that they match what you set delay to)
-
-2. packet loss (that it matches what you set it to- percentage value)
-
-
-### Using iperf3 with continuous ss-output file 
-we will only be looking at the last line in the ss-output txt file since it summarizes all data transmitted in experiment run the following simultaneously.
-
-Juliet: [3]
-```
-iperf3 -s  -1  
-```
-
-While that is running, paste the following in one Romeo terminal, 
-Romeo_1: [3]
-```
-wget -O ss-output.sh https://raw.githubusercontent.com/ffund/tcp-ip-essentials/gh-pages/scripts/ss-output.sh
-bash ss-output.sh 10.10.2.100  
-```
-
-While that is running, paste the following in the other Romeo terminal, 
-Romeo_2: [2] (240s duration, TCP reno, MSS 1460)
-```
-iperf3 -c juliet -t 240 -C reno -M 1460
-```
-
-When the process in Romeo_2 is done, bash will also stop running, but the process will not close, so you need to close it manually using ctrl+C. Then paste the following to see the output with tcp reno, 
-Romeo_1: [3]
-```
-cat sender-ss.txt | grep "reno"
-```
-
-##### Data to look at:
-iperf:
-
-BandWidth: compare it to model BW, you can find the ratio of experimental BW to model BW
-
-
-ss-output:
-
-1. min and avg rtt (that avg rtt is not much larger than min rtt, otherwise a queue would have formed)
-
-2. retrans and data_segs_out: packet loss=retrans/data_segs_out (that it matches what you set it to- not the percentage value)
+Check that indeed a queue doesn't form- from ss-output, rtt is not much larger than minrtt, and experiment BW is not very close to the bottleneck link rate (3Gbit).
 
 
 ### 9. 4312 B cases
@@ -349,7 +302,7 @@ Now re-run trial 9 again and confirm that mss does come out as 4312B in the ss-o
 
 
 # Code for remaining trials
-We now want to start running the 60 trials from the first environment. We will start with 20 trials corresponding to the 1460 Bytes MSS case, then do 4312 and 536 Bytes cases after. 
+We now want to start running the 60 trials from the first environment. We will start with 20 trials corresponding to the 1460 Bytes MSS case, then do 4312 and 536 Bytes cases after. Remember to disable TCP timestamps option for the cases of 1460 and 4312 B MSS, and increase mtu for the 4312 B case. 
 
 For each trial, do the following. Change the parameters in **bold** (or surrounded by 2 asterisks '** **') depending on each trial's settings.
 
