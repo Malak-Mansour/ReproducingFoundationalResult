@@ -302,27 +302,31 @@ Now re-run trial 9 again and confirm that mss does come out as 4312B in the ss-o
 
 
 ### 10. 536B cases (tcpdump)
-So far when you plot the experiment BW against model BW for the 4312 and 1460 B cases, you will notice that all the points are above the slope=1 line, meanwhile, in the paper, all the points are below the slope=1 line of figure 3. Furthermore, when you try the 536B cases, you will notice that the experimental BW is much higher than model BW and the ratio of exp to model BW is much higher! Therefore, it seems like some packets are getting aggregated, and it only became significantly noticeable with the lower mss case. 
+When you plot the experiment BW against model BW for the 4312 and 1460 B cases, you will notice that all the points are above the slope=1 line, meanwhile, in the paper, all the points are below the slope=1 line of Figure 3. Furthermore, when you try the 536B cases, you will notice that the experimental BW is much higher than model BW and the ratio of exp to model BW is much higher! Therefore, it seems like some packets are getting aggregated, and it only became significantly noticeable with the lower mss case (536B). 
 
-If the NIC is aggregating TCP segments, it would make a bigger relative difference in the small MSS case than in the large MSS case
+If the NIC is aggregating TCP segments, it would make a bigger relative difference in the small MSS case than in the large MSS case.
 
 Imagine the NIC is aggregating the TCP segments into e.g. 5000 B "chunks".  For the 4312 case, it's not very different than the segment size we "thought" we had. For the 536 case, it's very different. 
 
-So we try 'tcpdump' on the router while iperf is running.
+So we try 'tcpdump' on the router while the normal iperf is running.
+
 Router: [6]
 ```
 sudo tcpdump -i ens7
 ```
 
-When it is done scroll up and npotice how the packet size is double, triple, even quadruple of the mss value that you set (try it with 536, 1460, and 4312)
+When it is done scroll up and notice how the packet size is double, triple, or even quadruple the mss value that you set (try it with 536, 1460, and 4312)
 
 
 Now we'll do the following, to see what the effect of the segment offload is on the exp bw
-First, do the experiment a bunch of times with the current setting. maybe 10 times? so you'll get 10 "exp bw" values and 10 ratios of exp BW to model BW
-Then, we'll turn off segment offloading, and do it another 10 times
+First, do the experiment a bunch of times with the current setting, maybe 10 times. You'll get 10 "exp bw" values and 10 ratios of exp BW to model BW. 
+Then, we'll turn off segment offloading, and do it another 10 times.
 
-Segment offloading:
+##### Segment offloading:
 let's set up a second slice - make a copy of your notebook, in this copy, give it a different slice name, reserve and configure resources etc. At the end of configuring the resources (setting up the IP addresses and routes etc), in the "new" slice do
+
+(This is all in the setup-offloadingOff.ipynb file in this repo)
+
 ```
 for iface in slice.get_interfaces():
     iface_name = iface.get_device_name()
@@ -333,16 +337,14 @@ for iface in slice.get_interfaces():
 ```
 
 
-then in the "new" slice you will test with tcpdump at the router, like we have just been doing
+then in the "new" slice you will test with tcpdump at the router, as we have just been doing
 
 Router:
 ```
 sudo tcpdump -i ens7
 ```
 
-
-make sure we don't see any evidence of segments being "combined"
-then run the same trial (trial 3 for example) 10 times in the "new" slice and keep note of the ss-output results in a document
+Make sure we don't see any evidence of segments being "combined". Then run the same trial (trial 3 for example) 10 times in the "new" slice and keep note of the ss-output results in a document.
 
 
 # Full code incorporating all methodological issues
