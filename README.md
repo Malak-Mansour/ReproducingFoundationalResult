@@ -345,6 +345,136 @@ make sure we don't see any evidence of segments being "combined"
 then run the same trial (trial 3 for example) 10 times in the "new" slice and keep note of the ss-output results in a document
 
 
+# Full code incorporating all methodological issues
+Run setup-offloadingOff.ipynb (Fabric file in this repository) until the end of 'Exercise: Log in to resources'. Open 4 terminals and paste the ssh output for romeo twice, router once, and juliet once.
+
+
+Router:
+
+```
+iface_0=$(ip route get 10.10.1.100 | grep -oP "(?<=dev )[^ ]+")
+sudo tc qdisc del dev $iface_0 root
+sudo tc qdisc add dev $iface_0 root netem delay **3ms** 
+iface_1=$(ip route get 10.10.2.100 | grep -oP "(?<=dev )[^ ]+")
+sudo tc qdisc del dev $iface_1 root
+sudo tc qdisc add dev $iface_1 root handle 1: htb default 3
+sudo tc class add dev $iface_1 parent 1: classid 1:3 htb rate 1Gbit
+sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem delay **3ms** loss **15.66283969%** limit 100MB
+```
+
+
+
+##### Install iperf3 on Romeo and Juliet [3]
+
+Romeo and Juliet:
+
+```
+sudo apt-get update  
+sudo apt-get -y install iperf3  
+```
+
+##### Install moreutils to use certain functions later on
+
+Romeo:
+```
+sudo apt-get -y install moreutils r-base-core r-cran-ggplot2 r-cran-littler
+sudo sysctl -w net.ipv4.tcp_no_metrics_save=1  
+```
+
+##### Disable TCP timestamps option
+Romeo: [4] 
+```
+sudo sysctl -w net.ipv4.tcp_timestamps=0  
+```
+
+##### 4312B only
+##### You can check the current mtu value using
+Romeo, Juliet, and/or Router:
+```
+ifconfig | grep mtu
+```
+
+
+##### Increase the MTU on the experiment interface of romeo and juliet
+
+Romeo and Juliet: [5]
+```
+sudo ifconfig ens7 mtu 4352 up
+```
+
+
+#####  Increase the MTU on both of the experiment interfaces on the router
+
+Router: [5]
+
+```
+sudo ifconfig ens7 mtu 4352 up
+sudo ifconfig ens8 mtu 4352 up
+```
+
+##### Confirm that mtu did increase using
+Romeo, Juliet, and/or Router:
+```
+ifconfig | grep mtu
+```
+
+
+## Validating results and measuring BW
+
+### Ping 
+
+Romeo: (sending **5000** packets with 200ms in between each) [3] 
+```
+ping juliet -c **5000** -i 0.2
+```
+
+##### Data to look at:
+1. min and avg rtt (that they match what you set delay to)
+
+2. packet loss (that it matches what you set it to- percentage value)
+
+
+### Using iperf3 with continuous ss-output file
+we will only be looking at the last line in the ss-output txt file since it summarizes all data transmitted in the experiment run the following simultaneously.
+
+Juliet: [3]
+```
+iperf3 -s  -1  
+```
+
+While that is running, paste the following in one Romeo terminal, 
+Romeo_1: [3]
+```
+bash ss-output.sh 10.10.2.100  
+```
+
+While that is running, paste the following in the other Romeo terminal, 
+Romeo_2: [2] (240s duration, TCP reno, MSS **1460**)
+```
+iperf3 -c juliet -t 240 -C reno -M **1460**
+```
+
+When the process in Romeo_2 is done, bash will also stop running, but the process will not close, so you need to close it manually using ctrl+C. Then paste the following to see the output with tcp reno, 
+Romeo_1: [3]
+```
+cat sender-ss.txt | grep "reno"
+```
+
+##### Data to look at:
+iperf:
+
+BandWidth: compare it to model BW, you can find the ratio of experimental BW to model BW
+
+
+ss-output:
+
+1. min and avg rtt (that avg rtt is not much larger than min rtt, otherwise a queue would have formed)
+
+2. retrans and data_segs_out: packet loss=retrans/data_segs_out (that it matches what you set it to- not the percentage value)
+
+
+
+
 # Code for remaining trials
 We now want to start running the 60 trials from the first environment. We will start with 20 trials corresponding to the 1460 Bytes MSS case, then do 4312 and 536 Bytes cases after. Remember to disable TCP timestamps option for the cases of 1460 and 4312 B MSS, and increase mtu for the 4312 B case. 
 
