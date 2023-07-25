@@ -309,7 +309,7 @@ If the NIC is aggregating TCP segments, it would make a bigger relative differen
 Imagine the NIC is aggregating the TCP segments into e.g. 5000 B "chunks".  For the 4312 case, it's not very different than the segment size we "thought" we had. For the 536 case, it's very different. 
 
 So we try 'tcpdump' on the router while iperf is running.
-Router:
+Router: [6]
 ```
 sudo tcpdump -i ens7
 ```
@@ -503,3 +503,5 @@ To analyze results, we are plotting the experimental BW (from iperf in JupyterLa
 [4] https://docs.vmware.com/en/vRealize-Operations/8.10/com.vmware.vcom.scg.doc/GUID-DAC867BC-8C5F-4A5E-BB55-36FC25555696.html 
 
 [5] https://linuxhint.com/how-to-change-mtu-size-in-linux/ 
+
+[6] https://ffund.github.io/tcp-ip-essentials/lab1/1-5-tcpdump-wireshark 
