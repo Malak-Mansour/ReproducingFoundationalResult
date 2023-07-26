@@ -623,6 +623,13 @@ The receiver considers "time" to be "time from connection start, to time I got t
 The receiver gets the last bit a little later than the sender sends it, so the denominator in the receiver throughput is a tiny bit bigger, contributing to a slightly higher BW.
 
 
+### 4. Check that you did indeed increase the number of cores (on slice)
+
+On all nodes (romeo, juliet, and router)
+```
+lscpu
+```
+
 # Analyzing results
 To analyze results, we are plotting the experimental BW (from iperf in JupyterLab) against the model BW (from the calculations using the model), and comparing it to figure 3 in the paper. 
 
