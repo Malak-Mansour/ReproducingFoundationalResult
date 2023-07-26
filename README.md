@@ -447,6 +447,7 @@ iperf3 -s  -1
 While that is running, paste the following in one Romeo terminal, 
 Romeo_1: [3]
 ```
+wget -O ss-output.sh https://raw.githubusercontent.com/ffund/tcp-ip-essentials/gh-pages/scripts/ss-output.sh
 bash ss-output.sh 10.10.2.100  
 ```
 
