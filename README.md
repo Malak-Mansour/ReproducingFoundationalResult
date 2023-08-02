@@ -11,20 +11,38 @@ The paper's primary purpose is to
 2. Validate this foundational result through three primary network environments: Queueless Random Packet Loss, Environments with Queueing (not random), Effect of TCP Implementation.
 
 
-It should take about  to run this experiment.
+It should take about 30 minutes to run this experiment.
 
 You can run this experiment on [Fabric](https://teaching-on-testbeds.github.io/hello-fabric/ ). The steps in the hyperlink should be done.
 
 
 # Background
-Our main goal is to reproduce research from the paper titled The Macroscopic Behavior of the TCP Congestion Avoidance Algorithm:
-https://cseweb.ucsd.edu/classes/wi01/cse222/papers/mathis-tcpmodel-ccr97.pdf.
+We are reproducing research from the paper titled _The Macroscopic Behavior of the TCP Congestion Avoidance Algorithm_
+(Mathis, M., Semke, J., & Mahdavi, J. (1997). The Macroscopic Behavior of the TCP Congestion Avoidance Algorithm. ACM SIGCOMM Computer Communication Review, 27(3), 67-82. ) in order to better understand underlying methodology issues by running the experiments from the paper and matching its settings as closely as possible.
+In this experiment, we are only focusing on reproducing results from the first environment, Queueless Random Packet Loss. This environment validates the foundational result, which shows a linear relationship between TCP bandwidth and three parameters that we vary: Delay/RTT, MSS, packet loss (p). 
+
+<img width="272" alt="image" src="https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/e04ea6f0-1a89-4e6b-94ee-d68323bbe4dd">
+
+As part of validating the foundational result, we are going to try reproducing figure 3 below.
+
+<img width="641" alt="image" src="https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/8ef680f3-0051-4911-8654-846739068e0b">
+
+## Choices for setting up experiment 
+We are using this part from the paper to extract information about what parameter values we are going to use in our trials.
+
+![image](https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/d07f59d1-143e-4b94-9a71-d8d47229e2af)
 
 
+### MSS
+There are 3 MSS values: 526 bytes (B), 1460 B, 4312 B.
+### RTT/delay
+There are 5 RTT values between 3 and 300ms, but no further details are given. One approach is to choose 5 values that are equally apart: 3, 77.25, 151.5, 225.75, and 300 ms. 
+### Packet loss (p)
+Packet loss values are uniformly distributed in log(p) between  0.00003 and  0.3. 
+The total number of points in Figure 3 is approximately 60, this means that we have 60 BW values, so 60 trials in total. With 3 MSS values and 5 RTT values, 60/(3*5)=4, this leaves 4 points for p. Figure 3 has packet loss on its x-axis, so p is not just 4 discrete values. For every combination of MSS and delay, we should generate 4 uniformly distributed values between 0.00003 and 0.3
+### Bottleneck link rate
+We don't want a queue to form since this is a queueless random packet loss experiment. Therefore, the bottleneck link rate must be greater than the maximum model BW. The maximum BW in Figure 3 of the paper is around 2e8 bits/s, so we will set the bottleneck link rate to 1Gbit.
 
-We are reproducing research to create educational material for students and professors by helping them understand underlying methodological issues by running the experiments from the paper and matching its settings as closely as possible.
-
-We are creating this result to better understand underlying methodology issues
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
