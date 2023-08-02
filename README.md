@@ -50,8 +50,16 @@ The straightforward implementation of the experiment may not behave as expected.
 <img width="976" alt="image" src="https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/5b490c86-8fc6-4eb8-9a25-5572ded55b04">
 
 
+# Results 
+This is how our results will look like as we discover the methodological issues
+
+<img width="473" alt="image" src="https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/351116f5-e37e-4bb2-a2c0-bc48050a2bd3">
+
+
+
 
 # Run My Experiment 
+
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
