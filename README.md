@@ -27,7 +27,7 @@ As part of validating the foundational result, we are going to try reproducing f
 
 <img width="641" alt="image" src="https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/8ef680f3-0051-4911-8654-846739068e0b">
 
-## Choices for setting up experiment 
+## Choices for setting up the experiment 
 We are using this part from the paper to extract information about what parameter values we are going to use in our trials.
 
 ![image](https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/d07f59d1-143e-4b94-9a71-d8d47229e2af)
@@ -43,6 +43,15 @@ The total number of points in Figure 3 is approximately 60, this means that we h
 ### Bottleneck link rate
 We don't want a queue to form since this is a queueless random packet loss experiment. Therefore, the bottleneck link rate must be greater than the maximum model BW. The maximum BW in Figure 3 of the paper is around 2e8 bits/s, so we will set the bottleneck link rate to 1Gbit.
 
+
+## Experiment Procedure 
+The straightforward implementation of the experiment may not behave as expected. By validating at each step, we can identify the issues and resolve them. This is the flowchart of the experiment procedure.
+
+<img width="976" alt="image" src="https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/5b490c86-8fc6-4eb8-9a25-5572ded55b04">
+
+
+
+# Run My Experiment 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
