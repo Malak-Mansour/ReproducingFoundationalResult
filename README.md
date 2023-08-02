@@ -1,4 +1,4 @@
-# 
+# Reproducing a foundational result to find underlying methodological issues 
 ###### Malak Mansour
 ###### August 11th, 2023
 
@@ -13,13 +13,21 @@ The paper's primary purpose is to
 
 It should take about  to run this experiment.
 
-You can run this experiment on [Fabric](https://fabric-testbed.net/)
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ReproducingFoundationalResult
-Reproducing a foundational result to find underlying methodological issues 
+You can run this experiment on [Fabric](https://teaching-on-testbeds.github.io/hello-fabric/ ). The steps in the hyperlink should be done.
 
-# Setup on Fabric
-Create an account on Fabric and familiarize yourself with it on https://teaching-on-testbeds.github.io/hello-fabric/ 
+
+# Background
+Our main goal is to reproduce research from the paper titled The Macroscopic Behavior of the TCP Congestion Avoidance Algorithm:
+https://cseweb.ucsd.edu/classes/wi01/cse222/papers/mathis-tcpmodel-ccr97.pdf.
+
+
+
+We are reproducing research to create educational material for students and professors by helping them understand underlying methodological issues by running the experiments from the paper and matching its settings as closely as possible.
+
+We are creating this result to better understand underlying methodology issues
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 Run setup.ipynb (Fabric file in this repository) until the end of 'Exercise: Log in to resources'
 
@@ -29,9 +37,7 @@ Open 4 new terminals on Jupyter where you paste the SSH command for 2 romeo term
 # Our purpose
 Our main goal is to reproduce research from the paper titled The Macroscopic Behavior of the TCP Congestion Avoidance Algorithm:
 https://cseweb.ucsd.edu/classes/wi01/cse222/papers/mathis-tcpmodel-ccr97.pdf. We are reproducing research to create educational material for students and professors by helping them understand underlying methodological issues by running the experiments from the paper and matching its settings as closely as possible.
-The paper's primary purpose is to 
-1. Derive a model for TCP to predict BandWidth (BW)
-2. Validate this foundational result through three primary network environments: Queueless Random Packet Loss, Environments with Queueing (not random), Effect of TCP Implementation.
+
 
 # First Environment Setup
 In this document, we are focusing on reproducing results from the first environment: Queueless Random Packet Loss. In this environment, they validated the BW-predicting model by measuring BW under the assumption that no queue is formed and packet losses are random. The foundational result that we are validating involves varying three parameters (Delay/RTT, MSS, packet loss (p)) to produce BW. 
