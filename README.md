@@ -89,7 +89,7 @@ Look at ss-output to validate,
 
 ### 3. Identify Methodology Issues
 
-#### Issue #1: packet loss
+#### Issue #1: Interpreting the packet loss parameter
 ##### Experiment settings to run:
 (parameters and link back to "Run My Experiment", sections 1 and 2)
 
@@ -97,11 +97,12 @@ Look at ss-output to validate,
 (highlight miustakes in outout code block)
 
 ##### How to fix it: 
+The "loss" in netem is expressed as a percent, in the paper p is expressed as a ratio.
 
 ##### Rerun experiment with fix 
 (insert example of fixed result)
 
-#### Issue #1: packet loss
+#### Issue #2: Setting a sufficient experiment duration
 ##### Experiment settings to run:
 (parameters and link back to "Run My Experiment", sections 1 and 2)
 
@@ -109,11 +110,13 @@ Look at ss-output to validate,
 (highlight miustakes in outout code block)
 
 ##### How to fix it: 
+For small values of p, packet loss is a rare event - we need a longer experiment duration to approximate the "requested" packet loss.
+
 
 ##### Rerun experiment with fix 
 (insert example of fixed result)
 
-#### Issue #1: packet loss
+#### Issue #3: Experiencing a queueless environment
 ##### Experiment settings to run:
 (parameters and link back to "Run My Experiment", sections 1 and 2)
 
@@ -121,6 +124,49 @@ Look at ss-output to validate,
 (highlight miustakes in outout code block)
 
 ##### How to fix it: 
+Although the model does not predict BW exceeding 1Gbps, we observe this in practice, so we must increase the bottleneck rate to avoid queuing.
+
+
+##### Rerun experiment with fix 
+(insert example of fixed result)
+
+#### Issue #4: Getting the requested MSS (1460B case)
+##### Experiment settings to run:
+(parameters and link back to "Run My Experiment", sections 1 and 2)
+
+##### Validate setup, what is wrong with the output?
+(highlight mistakes in output code block)
+
+##### How to fix it: 
+Hidden TCP timestamps option takes up 12 bytes from what we set mss to, so we must turn it off to get 1460B mss value.
+
+
+##### Rerun experiment with fix 
+(insert example of fixed result)
+
+#### Issue #5: Getting the requested MSS (4312B case)
+(parameters and link back to "Run My Experiment", sections 1 and 2)
+
+##### Validate setup, what is wrong with the output?
+(highlight miustakes in outout code block)
+
+##### How to fix it: 
+Default Ethernet MTU is 1500B, to have MSS > 1460 we need to increase MTU also.
+
+
+##### Rerun experiment with fix 
+(insert example of fixed result)
+
+#### Issue #6: Getting the requested MSS (all cases)
+##### Experiment settings to run:
+(parameters and link back to "Run My Experiment", sections 1 and 2)
+
+##### Validate setup, what is wrong with the output?
+(highlight miustakes in outout code block)
+
+##### How to fix it: 
+NIC has a segment offload feature, combines segments en route to same destination - unless we turn it off, "effective MSS" is higher than what TCP thinks it is.
+
 
 ##### Rerun experiment with fix 
 (insert example of fixed result)
@@ -128,6 +174,15 @@ Look at ss-output to validate,
 
 ### 4. Generate figure 3 
 (give table values to run and include full code including all issue fixes)
+
+
+
+
+
+
+
+
+
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
