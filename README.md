@@ -59,8 +59,75 @@ This is how our results will look like as we discover the methodological issues
 
 
 # Run My Experiment 
+Run setup.ipynb (in this repository) until the end of 'Exercise: Log in to resources' to setup the line network.
+
+Open 4 new terminals on Jupyter where you paste the SSH command for 2 romeo terminals, 1 juliet terminal, and 1 router terminal
+![image](https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/0218e560-2bfe-4098-9b8d-b43d3315b422)
 
 
+## Let's run one experiment example according to the flowchart experiment procedure.
+### 1. Setup and Validate
+For each experiment, we are going to setup the requested parameters using tc qdisc. For example, let's setup the following parameters: mss= , p= , rtt= . Here is how: (show tc qdisc code block and bold the parameters to focus on)
+
+Validate this experiment setup using ping. (show output of ping as a text and bold the parameters to focus on them)
+
+### 2. Execute and Validate
+Execute experiment using iperf
+
+Look at ss-output to validate,
+
+#### mss
+
+#### rtt
+
+#### queueless environment
+
+#### packet loss
+
+(show output as code block and bold the necessary parts)
+
+
+### 3. Identify Methodology Issues
+
+#### Issue #1: packet loss
+##### Experiment settings to run:
+(parameters and link back to "Run My Experiment", sections 1 and 2)
+
+##### Validate setup, what is wrong with the output?
+(highlight miustakes in outout code block)
+
+##### How to fix it: 
+
+##### Rerun experiment with fix 
+(insert example of fixed result)
+
+#### Issue #1: packet loss
+##### Experiment settings to run:
+(parameters and link back to "Run My Experiment", sections 1 and 2)
+
+##### Validate setup, what is wrong with the output?
+(highlight miustakes in outout code block)
+
+##### How to fix it: 
+
+##### Rerun experiment with fix 
+(insert example of fixed result)
+
+#### Issue #1: packet loss
+##### Experiment settings to run:
+(parameters and link back to "Run My Experiment", sections 1 and 2)
+
+##### Validate setup, what is wrong with the output?
+(highlight miustakes in outout code block)
+
+##### How to fix it: 
+
+##### Rerun experiment with fix 
+(insert example of fixed result)
+
+
+### 4. Generate figure 3 
+(give table values to run and include full code including all issue fixes)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
