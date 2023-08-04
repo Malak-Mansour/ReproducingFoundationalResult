@@ -1,7 +1,6 @@
 # Reproducing a foundational result to find underlying methodological issues 
 
 ###### Malak Mansour
-
 ###### August 11th, 2023
 
 
