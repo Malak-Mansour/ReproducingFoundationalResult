@@ -60,7 +60,7 @@ This is how our results will look like as we discover the methodological issues
 
 
 # Run My Experiment 
-Run setup.ipynb (in this repository) until the end of 'Exercise: Log in to resources' to setup the line network.
+Run setup.ipynb (in this repository) until the end of 'Exercise: Log in to resources' to setup the line network. Do not run 'Turn segment offloading off'. We will address this later!
 
 Open 4 new terminals on Jupyter where you paste the SSH command for 2 romeo terminals, 1 juliet terminal, and 1 router terminal
 ![image](https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/0218e560-2bfe-4098-9b8d-b43d3315b422)
@@ -167,6 +167,18 @@ Default Ethernet MTU is 1500B, to have MSS > 1460 we need to increase MTU also.
 
 ##### How to fix it: 
 NIC has a segment offload feature, combines segments en route to same destination - unless we turn it off, "effective MSS" is higher than what TCP thinks it is.
+
+Now run 'Turn segment offloading off' in setup.ipynb
+```
+for iface in slice.get_interfaces():
+    iface_name = iface.get_device_name()
+    n = iface.get_node()
+    offloads = ["gro", "lro", "gso", "tso"]
+    for offload in offloads:
+        n.execute("sudo ethtool -K %s %s off" % (iface_name, offload))
+```
+
+and re-run 'Exercise: Log in to resources' to get the new ssh command for juliet, romeo, and router.
 
 
 ##### Rerun experiment with fix 
