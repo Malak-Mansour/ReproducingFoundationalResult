@@ -174,11 +174,135 @@ NIC has a segment offload feature, combines segments en route to same destinatio
 
 
 ### 4. Generate figure 3 
-(give table values to run and include full code including all issue fixes)
+Generate on Excel/Google Sheets 60 points with the 3 parameters, and number each trial. Calculate the model BW using the model (equation 3). To verify your choice of parameter values, you can plot the model BW against itself and confirm that the range of BW values on the x and y axes matches that from Figure 3 (min:5e4, max:2e8). Similarly, calculate BW*RTT/MSS vs p to confirm the range of values in figure 4 (min:0.0002, max:0.2). Plot in log scale. 
+Here is a google sheet with my 60 trials for your reference: https://docs.google.com/spreadsheets/d/1vfvR07gic8oynpdxMrSt_JkWlNSyXOmwcM6QkL_JecY/edit 
+
+
+#### Full code including all methodological issues
+
+Router:
+
+```
+iface_0=$(ip route get 10.10.1.100 | grep -oP "(?<=dev )[^ ]+")
+sudo tc qdisc del dev $iface_0 root
+sudo tc qdisc add dev $iface_0 root netem delay **3ms** 
+iface_1=$(ip route get 10.10.2.100 | grep -oP "(?<=dev )[^ ]+")
+sudo tc qdisc del dev $iface_1 root
+sudo tc qdisc add dev $iface_1 root handle 1: htb default 3
+sudo tc class add dev $iface_1 parent 1: classid 1:3 htb rate 1Gbit
+sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem delay **3ms** loss **15.66283969%** limit 100MB
+```
+
+
+##### Disable TCP timestamps option
+Romeo: [4] 
+```
+sudo sysctl -w net.ipv4.tcp_timestamps=0  
+```
+
+##### 4312B only
+###### You can check the current mtu value using
+Romeo, Juliet, and/or Router:
+```
+ifconfig | grep mtu
+```
+
+
+###### Increase the MTU on the experiment interface of romeo and juliet
+
+Romeo and Juliet: [5]
+```
+sudo ifconfig ens7 mtu 4352 up
+```
+
+
+######  Increase the MTU on both of the experiment interfaces on the router
+
+Router: [5]
+
+```
+sudo ifconfig ens7 mtu 4352 up
+sudo ifconfig ens8 mtu 4352 up
+```
+
+###### Confirm that mtu did increase using
+Romeo, Juliet, and/or Router:
+```
+ifconfig | grep mtu
+```
+
+
+##### Validating results and measuring BW
+
+##### Ping 
+
+Romeo: (sending **5000** packets with 200ms in between each) [3] 
+```
+ping juliet -c **5000** -i 0.2
+```
+
+###### Data to look at:
+1. min and avg rtt (that they match what you set delay to)
+
+2. packet loss (that it matches what you set it to- percentage value)
+
+
+##### Using iperf3 with continuous ss-output file
+we will only be looking at the last line in the ss-output txt file since it summarizes all data transmitted in the experiment run the following simultaneously.
+
+Juliet: [3]
+```
+iperf3 -s  -1  
+```
+
+While that is running, paste the following in one Romeo terminal, 
+Romeo_1: [3]
+```
+wget -O ss-output.sh https://raw.githubusercontent.com/ffund/tcp-ip-essentials/gh-pages/scripts/ss-output.sh
+bash ss-output.sh 10.10.2.100  
+```
+
+While that is running, paste the following in the other Romeo terminal, 
+Romeo_2: [2] (240s duration, TCP reno, MSS **1460**)
+```
+iperf3 -c juliet -t 240 -C reno -M **1460**
+```
+
+When the process in Romeo_2 is done, bash will also stop running, but the process will not close, so you need to close it manually using ctrl+C. Then paste the following to see the output with tcp reno, 
+Romeo_1: [3]
+```
+cat sender-ss.txt | grep "reno"
+```
+
+###### Data to look at:
+iperf:
+
+BandWidth: compare it to model BW, you can find the ratio of experimental BW to model BW
+
+
+ss-output:
+
+1. min and avg rtt (that avg rtt is not much larger than min rtt, otherwise a queue would have formed)
+
+2. retrans and data_segs_out: packet loss=retrans/data_segs_out (that it matches what you set it to- not the percentage value)
 
 
 
+#### Analyzing results
+To analyze results, we are plotting the experimental BW (from iperf in JupyterLab) against the model BW (from the calculations using the model), and comparing it to figure 3 in the paper. 
 
+# Resources
+[1] https://www.cs.unm.edu/~crandall/netsfall13/TCtutorial.pdf 
+
+[2] https://manpages.ubuntu.com/manpages/xenial/man1/iperf3.1.html 
+
+[3] https://witestlab.poly.edu/blog/tcp-congestion-control-basics/#setupexperiment 
+
+[4] https://docs.vmware.com/en/vRealize-Operations/8.10/com.vmware.vcom.scg.doc/GUID-DAC867BC-8C5F-4A5E-BB55-36FC25555696.html 
+
+[5] https://linuxhint.com/how-to-change-mtu-size-in-linux/ 
+
+[6] https://ffund.github.io/tcp-ip-essentials/lab1/1-5-tcpdump-wireshark 
 
 
 
