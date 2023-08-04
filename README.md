@@ -197,7 +197,7 @@ Router: (3Gbit bottleneck link rate [3], 0.1GB buffer on both sides [3], 3ms del
 ```
 iface_0=$(ip route get 10.10.1.100 | grep -oP "(?<=dev )[^ ]+")
 sudo tc qdisc del dev $iface_0 root
-sudo tc qdisc add dev $iface_0 root netem delay **3ms** 
+sudo tc qdisc add dev $iface_0 root netem delay 3ms
 iface_1=$(ip route get 10.10.2.100 | grep -oP "(?<=dev )[^ ]+")
 sudo tc qdisc del dev $iface_1 root
 sudo tc qdisc add dev $iface_1 root handle 1: htb default 3
