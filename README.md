@@ -168,7 +168,17 @@ Default Ethernet MTU is 1500B, to have MSS > 1460 we need to increase MTU also.
 ##### How to fix it: 
 NIC has a segment offload feature, combines segments en route to same destination - unless we turn it off, "effective MSS" is higher than what TCP thinks it is.
 
-Now run 'Turn segment offloading off' in setup.ipynb
+Try 'tcpdump' on the router while the normal iperf is running.
+
+Router: [6]
+```
+sudo tcpdump -i ens7
+```
+
+When it is done scroll up and notice how the packet size is double, triple, or even quadruple the mss value that you set (try it with 536, 1460, and 4312). Because of the direct proportionality between BW and MSS in the model, when MSS is very high (aggregated), it results in the high BW values that we were getting. So we can turn off this segment offloading feature to prevent segments from aggregating and get reasonable experimental BW values.
+
+
+Run 'Turn segment offloading off' in setup.ipynb that has the following code:
 ```
 for iface in slice.get_interfaces():
     iface_name = iface.get_device_name()
@@ -177,8 +187,6 @@ for iface in slice.get_interfaces():
     for offload in offloads:
         n.execute("sudo ethtool -K %s %s off" % (iface_name, offload))
 ```
-
-and re-run 'Exercise: Log in to resources' to get the new ssh command for juliet, romeo, and router.
 
 
 ##### Rerun experiment with fix 
