@@ -48,8 +48,7 @@ We don't want a queue to form since this is a queueless random packet loss exper
 ## Experiment Procedure 
 The straightforward implementation of the experiment may not behave as expected. By validating at each step, we can identify the issues and resolve them. This is the flowchart of the experiment procedure.
 
-![image](https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/0cf689c9-dd32-4776-a6d3-944359059e56)
-
+![image](https://github.com/Malak-Mansour/ReproducingFoundationalResult/assets/73076958/86b9af16-e1f2-47ec-b182-894286b0e161)
 
 # Results 
 This is how our results will look like as we discover the methodological issues
