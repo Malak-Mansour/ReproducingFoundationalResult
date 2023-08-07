@@ -89,9 +89,9 @@ sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem <b>delay 151.5ms loss 
 
 #### Validate this experiment setup using ping:
 ##### Romeo:
-'''
+```
 ping juliet -c 1000 -i 0.2
-'''
+```
 
 ##### Output:
 <pre>
