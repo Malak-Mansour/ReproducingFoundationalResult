@@ -89,11 +89,13 @@ sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem <b>delay 151.5ms loss 
 
 #### Validate this experiment setup using ping:
 ##### Romeo:
+
 ```
 ping juliet -c 1000 -i 0.2
 ```
 
 ##### Output:
+
 <pre>
 --- juliet ping statistics ---
 1000 packets transmitted, 829 received, <b>17.1% packet loss</b>, time 200593ms
@@ -120,6 +122,7 @@ Look at ss-output to validate,
 
 #### Issue #1: Interpreting the packet loss parameter
 ##### Experiment settings to run:
+
 (parameters and link back to "Run My Experiment", sections 1 and 2)
 Trial 5
 
@@ -149,6 +152,7 @@ Validating execution: Model BW = 4.92 Mbps, Experiment BW = 1.68 Mbps
 —- juliet ping statistics —-
 1000 packets transmitted, 838 received, <b> 16.2% packet loss </b> time 200549ms
 </pre> 
+
 ##### Validate setup, what is wrong with the output?
 (highlight miustakes in outout code block)
 
