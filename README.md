@@ -93,7 +93,7 @@ sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem <b>delay 151.5ms loss 
 Sending 1000 packets
 
 <pre>
-ping juliet -c <b> 1000 </b> -i 0.2
+ping juliet -c <b>1000</b> -i 0.2
 </pre>
 
 ##### Output:
@@ -125,44 +125,40 @@ Look at ss-output to validate,
 #### Issue #1: Interpreting the packet loss parameter
 ##### Experiment settings to run:
 
-(parameters and link back to "Run My Experiment", sections 1 and 2)
-Trial 5
+(Go back to "Run My Experiment" above, sections 1 and 2)
 
-Experiment setup: RTT = 6ms, p=0.1566283969, MSS = 1460B
+Experiment setup (Trial 5): RTT = 6ms, p=0.1566283969, MSS = 1460B
 
 Command to implement setup: 
 <pre>
 netem delay 151.5ms <b>loss 0.1566283969%</b> limit 100MB
 </pre>
 
-Validating execution: Model BW = 4.92 Mbps, Experiment BW = 207 Mbps
-
-<pre> 
-—- juliet ping statistics —-
-1000 packets transmitted, 999 received, <b> 0.1% packet loss </b> time 200174ms
-</pre> 
-___________________________________
-Command to fix issue: 
-<pre> 
-netem delay 151.5ms <b>loss 15.66283969% </b> limit 100MB 
-</pre>
-
-Validating execution: Model BW = 4.92 Mbps, Experiment BW = 1.68 Mbps
-
-
-<pre> 
-—- juliet ping statistics —-
-1000 packets transmitted, 838 received, <b> 16.2% packet loss </b> time 200549ms
-</pre> 
-
 ##### Validate setup, what is wrong with the output?
-(highlight miustakes in outout code block)
+Model BW = 4.92 Mbps, <b>Experiment BW = 207 Mbps</b>
+
+<pre> 
+—- juliet ping statistics —-
+1000 packets transmitted, 999 received, <b>0.1% packet loss</b> time 200174ms
+</pre> 
+
 
 ##### How to fix it: 
+Issue 1:
 The "loss" in netem is expressed as a percent, in the paper p is expressed as a ratio.
 
+Command to fix issue:
+<pre> 
+netem delay 151.5ms <b>loss 15.66283969%</b> limit 100MB 
+</pre>
+
 ##### Rerun experiment with fix 
-(insert example of fixed result)
+Validating execution: Model BW = 4.92 Mbps, <b>Experiment BW = 1.68 Mbps</b>
+
+<pre> 
+—- juliet ping statistics —-
+1000 packets transmitted, 838 received, <b>16.2% packet loss</b> time 200549ms
+</pre> 
 
 #### Issue #2: Setting a sufficient experiment duration
 ##### Experiment settings to run:
