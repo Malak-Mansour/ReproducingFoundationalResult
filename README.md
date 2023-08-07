@@ -92,7 +92,7 @@ sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem <b>delay 151.5ms loss 
 
 Sending 1000 packets
 
-```
+<pre>
 ping juliet -c <b> 1000 </b> -i 0.2
 </pre>
 
