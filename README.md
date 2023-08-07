@@ -67,9 +67,38 @@ Open 4 new terminals on Jupyter where you paste the SSH command for 2 romeo term
 
 ## Let's run one experiment example according to the flowchart experiment procedure.
 ### 1. Setup and Validate
-For each experiment, we are going to setup the requested parameters using tc qdisc. For example, let's setup the following parameters: mss= , p= , rtt= . Here is how: (show tc qdisc code block and bold the parameters to focus on)
+For each experiment, we are going to setup the requested parameters using tc qdisc. 
 
-Validate this experiment setup using ping. (show output of ping as a text and bold the parameters to focus on them)
+
+For example, let's setup the following parameters: mss = 1460, p = 0.1566283969, rtt = 6ms. 
+
+#### Setup
+Router: (1Gbit bottleneck link rate [3], 0.1GB buffer on both sides [3], delay and loss [1] change depending on trial settings) 
+
+<pre>
+iface_0=$(ip route get 10.10.1.100 | grep -oP "(?<=dev )[^ ]+")
+sudo tc qdisc del dev $iface_0 root
+sudo tc qdisc add dev $iface_0 root netem delay 151.5ms 
+iface_1=$(ip route get 10.10.2.100 | grep -oP "(?<=dev )[^ ]+")
+sudo tc qdisc del dev $iface_1 root
+sudo tc qdisc add dev $iface_1 root handle 1: htb default 3
+sudo tc class add dev $iface_1 parent 1: classid 1:3 htb rate <b>1Gbit</b>
+sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem <b>delay 151.5ms loss 0.1097164529% limit 100MB<b>
+</pre>
+
+
+#### Validate this experiment setup using ping:
+##### Romeo:
+'''
+ping juliet -c 1000 -i 0.2
+'''
+
+##### Output:
+<pre>
+--- juliet ping statistics ---
+1000 packets transmitted, 829 received, <b>17.1% packet loss</b>, time 200593ms
+<b>rtt min/avg</b>/max/mdev = <b>6.088/6.131</b>/6.395/0.026 m5
+</pre>
 
 ### 2. Execute and Validate
 Execute experiment using iperf
@@ -92,7 +121,34 @@ Look at ss-output to validate,
 #### Issue #1: Interpreting the packet loss parameter
 ##### Experiment settings to run:
 (parameters and link back to "Run My Experiment", sections 1 and 2)
+Trial 5
 
+Experiment setup: RTT = 6ms, p=0.1566283969, MSS = 1460B
+
+Command to implement setup: 
+<pre>
+netem delay 151.5ms <b>loss 0.1566283969%</b> limit 100MB
+</pre>
+
+Validating execution: Model BW = 4.92 Mbps, Experiment BW = 207 Mbps
+
+<pre> 
+—- juliet ping statistics —-
+1000 packets transmitted, 999 received, <b> 0.1% packet loss </b> time 200174ms
+</pre> 
+___________________________________
+Command to fix issue: 
+<pre> 
+netem delay 151.5ms <b>loss 15.66283969% </b> limit 100MB 
+</pre>
+
+Validating execution: Model BW = 4.92 Mbps, Experiment BW = 1.68 Mbps
+
+
+<pre> 
+—- juliet ping statistics —-
+1000 packets transmitted, 838 received, <b> 16.2% packet loss </b> time 200549ms
+</pre> 
 ##### Validate setup, what is wrong with the output?
 (highlight miustakes in outout code block)
 
