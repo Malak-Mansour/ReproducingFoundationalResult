@@ -121,7 +121,7 @@ Look at ss-output to validate,
 
 
 ### 3. Identify Methodology Issues
-(Refer to "Run My Experiment" above to know where to , sections 1 and 2)
+Refer to "Run My Experiment" above (sections 1 and 2) to know where to implement the changes accordingly.
 
 #### Issue #1: Interpreting the packet loss parameter
 ##### Experiment settings to run:
