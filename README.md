@@ -121,13 +121,11 @@ Look at ss-output to validate,
 
 
 ### 3. Identify Methodology Issues
+(Refer to "Run My Experiment" above to know where to , sections 1 and 2)
 
 #### Issue #1: Interpreting the packet loss parameter
 ##### Experiment settings to run:
-
-(Go back to "Run My Experiment" above, sections 1 and 2)
-
-Experiment setup (Trial 5): RTT = 6ms, p=0.1566283969, MSS = 1460B
+Trial 5: RTT = 6ms, p=0.1566283969, MSS = 1460B
 
 Command to implement setup: 
 <pre>
@@ -152,7 +150,7 @@ Command to fix issue:
 netem delay 151.5ms <b>loss 15.66283969%</b> limit 100MB 
 </pre>
 
-##### Rerun experiment with fix 
+##### Fixed output
 Validating execution: Model BW = 4.92 Mbps, <b>Experiment BW = 1.68 Mbps</b>
 
 <pre> 
@@ -162,78 +160,187 @@ Validating execution: Model BW = 4.92 Mbps, <b>Experiment BW = 1.68 Mbps</b>
 
 #### Issue #2: Setting a sufficient experiment duration
 ##### Experiment settings to run:
-(parameters and link back to "Run My Experiment", sections 1 and 2)
+Trial 53: RTT = 600ms, p = 0.0000559121270201603, MSS = 1460B
+
+Command to implement setup:
+<pre>
+iperf3 -c juliet -t <b> 60 </b> -C reno -M 1460
+</pre>
 
 ##### Validate setup, what is wrong with the output?
-(highlight miustakes in outout code block)
+Validating execution: Model BW= 2.60 Mbps, Experiment BW = 31.4/23.1/32.1/31.8/32.0 Mbps
+
 
 ##### How to fix it: 
+Issue 2:
 For small values of p, packet loss is a rare event - we need a longer experiment duration to approximate the "requested" packet loss.
 
+Command to fix issue: 
+<pre>
+iperf3 -c juliet -t <b> 240 </b> -C reno -M 1460
+</pre>
 
-##### Rerun experiment with fix 
-(insert example of fixed result)
+##### Fixed output:
+Validating execution: Model BW= 2.60 Mbps, Experiment BW= 41.0 Mbps
+
+
+<pre> 
+ts sack reno wscale:7,7 rto:804 rtt:600.139/0.027 ato:40 mss:1448 pmtu:1500 rcmss:536 advmss: 1448 cwnd: 216 ssthresh :123 bytes_ sent: 433389053 bytes_retrans:21720 bytes_acked:433054566 bytes_ received:1 segs out:299362 segs_ in:77613 <b> data segs_ out:299359 </b> send 4169
+274bps lastsnd:124 lastrev: 241248 lastack:44 pacing_rate 5003120bps delivery_rate 4150000bps delivered: 299129 busy: 240644ms rwnd_limited: 2704ms
+(1.1%) sndbuf limited: 14020ms (5.8%) unacked: 216 <b> retrans:0/15 </b> cv space:14480 rcv ssthresh:64088 notsent: 2074712 minrtt:600
+</pre>
+
+Packet loss=retrains/data_segs_out= 15/299359=0.00005010706
 
 #### Issue #3: Experiencing a queueless environment
 ##### Experiment settings to run:
-(parameters and link back to "Run My Experiment", sections 1 and 2)
+Trial 11: RTT = 6ms, p = 0.000233840647, MSS = 4312B
+
+Command to implement setup: 
+<pre> 
+htb rate <b>1Gbit </b>
+</pre>
 
 ##### Validate setup, what is wrong with the output?
-(highlight miustakes in outout code block)
+Validating execution: Model BW= 376 Mbps, Experiment BW= 964 Mbps
+
+<pre>
+sack reno wscale:7,7 rto:224 <b>rtt:21.726</b> /
+0.218 mss: 4312 pmtu: 4352 revms
+S:536 advmss: 4312 cwnd:626 ssthresh: 173 bytes_sent :28918425429 bytes_retrans: 6502496 bytes_acke d:28909227934 segs_out:6706970 segs_in:665326 data segs out:6706968 send 993947160bps lastrov:2
+40008 pacing_rate 1192722864bps delivery_ rate 972939840bps delivered: 6704836 busy: 239992ms rwnd _limited:10128ms (4.28) snabuf_limited:492ms(0.28) unacked:625 retrans:0/1508 rcv_space: 43120 Ic ssthresh:61224 notsent: 517056 <b> minrtt:6.079 </b>
+</pre>
+
 
 ##### How to fix it: 
-Although the model does not predict BW exceeding 1Gbps, we observe this in practice, so we must increase the bottleneck rate to avoid queuing.
+Issue 3: Although the model does not predict BW exceeding 1Gbps, we observe this in practice, so we must increase the bottleneck rate to avoid queuing
 
+Command to fix issue: 
+<pre>
+htb rate <b> 3Gbit </b>
+</pre>
 
-##### Rerun experiment with fix 
-(insert example of fixed result)
+##### Fixed output:
+Validating execution: Model BW= 376 Mbps, Experiment BW= 1.57 Gbps
+
+<pre>
+sack reno scale: 7,7 rto: 208 <b>rtt:6.27 </b>, 3.149 m55:4312 pmt:4352 rcmss:536 advmss:4312 cwnd:111 ssthre
+sh:91 bytes_sent: 47177703213 bytes_retrans: 10210816 bytes_acked: 47167039638 segs_out:10941338 segs_in: 1333797 data_segs_out:10 941336 send 610694737bps lastrcv:240004 pacing_rate 732804464bps delivery_rate 566746984bps delivered: 10938864 busy: 240000ms r wnd limited:1508ms (0.6%) sndbuf_limited: 48ms (0.0%) unacked: 105 retrans: 0/2368 cv_space: 43120 rcv_ssthresh:61224 notsent: 23069 10
+<b> minrtt:6.073 </b>
+</pre>
 
 #### Issue #4: Getting the requested MSS (1460B case)
 ##### Experiment settings to run:
-(parameters and link back to "Run My Experiment", sections 1 and 2)
+Trial 17: RTT = 6ms, p = 0.03774108797, MSS = 1460B
+
+Command to implement setup: 
+<pre>
+iperf3 -c juliet-t 240 - C reno -M <b> 1460 </b>
+</pre>
 
 ##### Validate setup, what is wrong with the output?
-(highlight mistakes in output code block)
+
+Validating execution: Model BW= 389 kbps, Experiment BW= 600 kbps
+
+<pre>
+ts sack reno wscale: 7,7 to:356 rtt:154.626/0.012 <b>mss:1448</b> pmtu:1500 revmss:536 advmss:1448 cwnd:20 ssthresh:6 bytes sent:18631453 bytes_retrans: 603816
+bytes_acked:17998678 bytes_received:1 segs_out:12870 segs_in:5245 data_segs_out: 12868 5 end 1498325bps lastsnd:40 lastrcv:240352 lastack:40 pacing rate 1797984bps delivery rate 1347976bps delivered:12432 busy: 240196ms unacked:20 retrans:0/417 rv space: 14480 rcv_ssthresh:64088 notsent:105704 minrtt: 154
+</pre>
+
 
 ##### How to fix it: 
-Hidden TCP timestamps option takes up 12 bytes from what we set mss to, so we must turn it off to get 1460B mss value.
+Issue 4: Hidden TCP timestamps option takes up 12 bytes from what we set mss to, so we must turn it off to get 1460B mss value.
 
+Command to fix issue: 
+<pre>
+sudo sysctl -w net.ipv4.<b>tcp_timestamps=0 </b>
+</pre>
 
-##### Rerun experiment with fix 
-(insert example of fixed result)
+##### Fixed output:
+Validating execution: Model BW= 389 kbps, Experiment BW= 561 kbps
+
+<pre>
+
+sack reno wscale: 7,7 to: 368 rtt:167.759/19.504 ato:40 <b>mss:1460</b> pmtu: 1500 rcmss:536 advmss:
+1460 cwnd:5 ssthresh:5 bytes_sent:17492297 bytes_retrans:651160 bytes_acked: 16833838 bytes_received:1 segs_out: 11985 segs_in:5286 data_ segs_out:11982 send 348118bps lastsnd:92 lastrev: 240360 lastack:48 pacing_rate 417736bps delivery_r ate 289888bps delivered:11532 busy: 240204ms unacked:5 retrans:0/446 rev_space:14600 rev_ssthresh:64076 notsent: 2087801
+minrtt:154.561
+
+</pre>
 
 #### Issue #5: Getting the requested MSS (4312B case)
-(parameters and link back to "Run My Experiment", sections 1 and 2)
+##### Experiment settings to run:
+Trial 9: RTT = 6ms, p = 0.006217314741, MSS = 4312B
+
+Command to implement setup: 
+<pre> 
+iperf3 -c juliet - t 240 - C reno -M <b>4312 </b>
+</pre>
+
 
 ##### Validate setup, what is wrong with the output?
-(highlight miustakes in outout code block)
+Validating execution: mtu=1500B, Model BW= 72.9 Mbps, Experiment BW= 68.5 Mbps
+
+<pre>
+sack reno wcale:7,7 rto:208 rtt: 6.146/0.039
+<b>mss:1460 </b> mtu: 1500 rcvmss: 536 ad
+vmss:1460 cwnd:68 ssthresh:7 bytes_sent:2068078357 bytes_retrans: 12995460 bytes_acked: 2054989458 segs. out:1416496 Segs_in: 260893 data_segs_out:1416494 send 129228767bps lastrev: 240012 pacing_rate 15507452
+bps delivery_rate 1181337686ps delivered: 1407530 busy: 240084ms rwnd_limited:8ms(0.0%) unacked:64 retr ans:0/8901 rev_space:14600 cv_ssthresh: 64076 notsent: 1220560 mint: 6.063
+</pre>
 
 ##### How to fix it: 
-Default Ethernet MTU is 1500B, to have MSS > 1460 we need to increase MTU also.
+Issue 5: Default Ethernet MTU is 1500B, to have MSS > 1460 we need to increase MTU also.
 
+Command to fix issue: 
+<pre> 
+sudo ifconfig ens7 <b>mtu 4352 </b> up
+</pre>
 
-##### Rerun experiment with fix 
-(insert example of fixed result)
+##### Fixed output:
+Validating execution: mtu=4352B, Model BW= 72.9 Mbps, Experiment BW= 161 Mbps
+
+<pre>
+sack reno wscale:7,7 rto:208 rtt:6.487/0.63
+<b>mss: 4312 </b> omtu: 4352 rcmss:536 advmss: 4312
+cwnd: 10 ssthresh:5 bytes_sent: 4857045461 bytes_retrans:30501400 bytes_acked: 4826499254 segs_ou t:1126406 segs_in:311651 data_segs_out: 1126404 send 53177123bps lastrev:240008 pacing rate 6380
+8856bps delivery_rate 45085440bps delivered:1119321 busy: 239984ms rwnd limited: 12ms (0.08) unack ed: 9 retrans: 0/7075 rev space: 43120 rcv ssthresh:61224 notsent:2922376 minrtt:6.068
+</pre>
 
 #### Issue #6: Getting the requested MSS (all cases)
 ##### Experiment settings to run:
-(parameters and link back to "Run My Experiment", sections 1 and 2)
+Trial 3: RTT = 6ms, p = 0.001591398645, MSS = 536B
 
-##### Validate setup, what is wrong with the output?
-(highlight miustakes in outout code block)
+Command to implement setup: 
+<pre>
+iperf3 -c juliet-t 240 - C reno-M <b>536</b>
+</pre>
 
-##### How to fix it: 
-NIC has a segment offload feature, combines segments en route to same destination - unless we turn it off, "effective MSS" is higher than what TCP thinks it is.
 
 Try 'tcpdump' on the router while the normal iperf is running.
 
 Router: [6]
-```
-sudo tcpdump -i ens7
-```
+<pre>
+sudo <b>tcpdump</b> -i ens7
+</pre>
 
-When it is done scroll up and notice how the packet size is double, triple, or even quadruple the mss value that you set (try it with 536, 1460, and 4312). Because of the direct proportionality between BW and MSS in the model, when MSS is very high (aggregated), it results in the high BW values that we were getting. So we can turn off this segment offloading feature to prevent segments from aggregating and get reasonable experimental BW values.
+When it is done scroll up and notice how the packet size is double, triple, or even quadruple the mss value that you set (try it with 536, 1460, and 4312). 
 
+##### Validate setup, what is wrong with the output?
+Validating execution: Model BW= 17.9 Mbps, Experiment BW= 104 Mbps, Exp/Model BW=5.81
+
+<pre>
+19:35:25.382321 IP romeo.41376 > juliet.5201: Flags [P.], seg 52692552:52694160, ack 1, win 511, length <b>1608</b>
+19:35:25.382321 IP romeo.41376 > juliet.5201: Flags [P.], seq 52694160:52695232, ack 1, win 511, length <b>1072</b>
+19:35:25.388391 IP juliet.5201 > romeo.41376: Flags [.], ack 52682904, win 12392, options [nop, nop, sack 1 {52683976:52692552}], length 0
+19:35:25.388444 IP romeo.41376 > juliet.5201: Flags [.], seq 52682904:52683440, ack 1, win 511, length <b>536</b>
+</pre>
+
+
+##### How to fix it: 
+Issue 6: NIC has a segment offload feature, combines segments en route to same destination - unless we turn it off, "effective MSS" is higher than what TCP thinks it is.
+Because of the direct proportionality between BW and MSS in the model, when MSS is very high (aggregated), it results in the high BW values that we were getting. So we can turn off this segment offloading feature to prevent segments from aggregating and get reasonable experimental BW values.
+
+
+Command to fix issue:
 
 Run 'Turn segment offloading off' in setup.ipynb that has the following code:
 ```
@@ -246,8 +353,17 @@ for iface in slice.get_interfaces():
 ```
 
 
-##### Rerun experiment with fix 
-(insert example of fixed result)
+##### Fixed output:
+Validating execution: Model BW= 17.9 Mbps, Experiment BW= 20.9 Mbps, Exp/Model BW=1.17
+
+<pre>
+19:35:25.511521 IP romeo.41376 › juliet.5201: Flags [.], seq 52792248:52792784, ack 1, win 511, length <b> 536 </b>
+19:35:25.511611 IP romeo.41376 > juliet.5201: Flags [.], seq 52792784:52793320, ack 1, win 511, length <b> 536 </b>
+19:35:25.517596 IP juliet.5201 > romeo. 41376: Flags [.], ack 52787960, win 12392, options [nop, nop, sack 1 {52788496:52792784}], length 0
+19:35:25.517645 IP romeo.41376 > juliet.5201: Flags [.], seq 52787960:52788496, ack 1, win 511, length <b> 536 </b>
+19:35:25.517664 IP juliet.5201 > romeo.41376: Flags [.], ack 52787960, win 12392, options [nop, nop, sack 1 {52788496:52793320}], length 0
+19:35:25.517779 IP romeo.41376 › juliet.5201: Flags [.], seq 52793320:52793856, ack 1, win 511, length <b> 536 </b>
+</pre>
 
 
 ### 4. Generate figure 3 
