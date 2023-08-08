@@ -70,7 +70,7 @@ Open 4 new terminals on Jupyter where you paste the SSH command for 2 romeo term
 For each experiment, we are going to setup the requested parameters using tc qdisc. 
 
 
-For example, let's setup the following parameters: mss = 1460, p = 0.1566283969, rtt = 6ms. 
+For example, let's setup the following parameters: RTT = 6ms, p = 0.08202874901, MSS = 536 bytes
 
 #### Setup
 Router: (1Gbit bottleneck link rate [3], 0.1GB buffer on both sides [3], delay and loss [1] change depending on trial settings) 
@@ -78,20 +78,19 @@ Router: (1Gbit bottleneck link rate [3], 0.1GB buffer on both sides [3], delay a
 <pre>
 iface_0=$(ip route get 10.10.1.100 | grep -oP "(?<=dev )[^ ]+")
 sudo tc qdisc del dev $iface_0 root
-sudo tc qdisc add dev $iface_0 root netem delay 151.5ms 
+sudo tc qdisc add dev $iface_0 root netem delay 3ms 
 iface_1=$(ip route get 10.10.2.100 | grep -oP "(?<=dev )[^ ]+")
 sudo tc qdisc del dev $iface_1 root
 sudo tc qdisc add dev $iface_1 root handle 1: htb default 3
 sudo tc class add dev $iface_1 parent 1: classid 1:3 htb rate <b>1Gbit</b>
-sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem <b>delay 151.5ms loss 0.1097164529% limit 100MB</b>
+sudo tc qdisc add dev $iface_1 parent 1:3 handle 3: netem <b>delay 3ms loss 8.202874901% limit 100MB</b>
 </pre>
 
 
 #### Validate this experiment setup using ping:
-##### Romeo:
+##### Sending 1000 packets
 
-Sending 1000 packets
-
+Romeo:
 <pre>
 ping juliet -c <b>1000</b> -i 0.2
 </pre>
@@ -100,28 +99,71 @@ ping juliet -c <b>1000</b> -i 0.2
 
 <pre>
 --- juliet ping statistics ---
-1000 packets transmitted, 829 received, <b>17.1% packet loss</b>, time 200593ms
-<b>rtt min/avg</b>/max/mdev = <b>6.088/6.131</b>/6.395/0.026 ms
+1000 packets transmitted, 921 received, <b>7.9% packet loss</b>, time 200338ms
+<b>rtt min/avg</b>/max/mdev = <b> 6.107/6.139</b>/6.360/0.017 ms
 </pre>
 
 ### 2. Execute and Validate
-Execute experiment using iperf
 
-Look at ss-output to validate,
+#### Execute experiment using iperf 
+
+Juliet: [3]
+```
+iperf3 -s  -1  
+```
+
+While that is running, paste the following in one Romeo terminal, Romeo_1: [3]
+```
+wget -O ss-output.sh https://raw.githubusercontent.com/ffund/tcp-ip-essentials/gh-pages/scripts/ss-output.sh
+bash ss-output.sh 10.10.2.100  
+```
+
+While that is running, paste the following in the other Romeo terminal, Romeo_2: [2] (240s duration, TCP reno, MSS 536) 
+```
+iperf3 -c juliet -t 240 -C reno -M 536
+```
+
+When the process in Romeo_2 is done, bash will also stop running, but the process will not close, so you need to close it manually using ctrl+C. Then paste the following to see the output with tcp reno,
+Romeo_1: [3]
+```
+cat sender-ss.txt | grep "reno"
+```
+
+#### Validating setup 
+
+##### iperf output 
+<pre>
+[ID] Interval /t Transfer /t Bitrate /t Retr
+[5] 0.00-240.00 sec /t 49.7 MBytes /t 1.74 Mbits/sec /t 8838
+[5] 0.00-240.01 sec /t 49.6 MBytes /t <b>1.73 Mbits/sec </b>
+</pre>
+
+Experiment BandWidth= 1.73 Mbits/sec 
+
+##### ss-output
+<pre> 
+sack reno wscale: 7,7 to: 212 <b>rtt:8.022</b> /2.821 <b>mss:536 </b> pmtu:1500 rcvmss:536 advmss:53
+6 cwnd:4 ssthresh:2 bytes_ sent:56761901 bytes_retrans:4737168 bytes_ acked:52023126 segs_ out:105902 segs_in:5
+8321 <b> data segs out:105900 </b> send 2138120bps lastsnd:4 lastrev: 240008 lastack:4 pacing rate 2565544bps delivery rate 1404056bps delivered:97060 busy: 240000ms unacked:3 <b> retrans: </b> 0/<b> 8838 </b> rcv_space:5360 rcv_ssthresh:65000 no tsent: 80936 <b> minrtt:6.056 </b>
+
+</pre>
+
 
 #### mss
+mss=536 bytes
 
-#### rtt
+#### rtt or delay
+rtt= 8.022 ms, minrtt= 6.056 ms
 
 #### queueless environment
+A queue forms when rtt>>minrtt. But since rtt= 8.022 ms is close enough to minrtt= 6.056 ms, we know that a queue didn’t form
 
 #### packet loss
-
-(show output as code block and bold the necessary parts)
+Packet loss=retrans/data_segs_out= 8838/105900 = 0.08345609065 , p = 0.08202874901
 
 
 ### 3. Identify Methodology Issues
-Refer to "Run My Experiment" above (sections 1 and 2) to know where to implement the changes accordingly.
+Refer to "Run My Experiment" above (sections 1 and 2) to know where to implement the changes accordingly
 
 #### Issue #1: Interpreting the packet loss parameter
 ##### Experiment settings to run:
@@ -482,7 +524,7 @@ ss-output:
 
 
 #### Analyzing results
-To analyze results, we are plotting the experimental BW (from iperf in JupyterLab) against the model BW (from the calculations using the model), and comparing it to figure 3 in the paper. 
+To analyze results, we are plotting the experimental BW (from iperf) against the model BW (from the calculations using the model), and comparing it to figure 3 in the paper. The closer the set of points are to the x=y line, the better the results are. 
 
 
 # Possible fixes
@@ -563,8 +605,6 @@ On all nodes (romeo, juliet, and router)
 lscpu
 ```
 
-# Analyzing results
-To analyze results, we are plotting the experimental BW (from iperf in JupyterLab) against the model BW (from the calculations using the model), and comparing it to figure 3 in the paper. 
 
 # Resources
 [1] https://www.cs.unm.edu/~crandall/netsfall13/TCtutorial.pdf 
