@@ -484,36 +484,6 @@ ss-output:
 #### Analyzing results
 To analyze results, we are plotting the experimental BW (from iperf in JupyterLab) against the model BW (from the calculations using the model), and comparing it to figure 3 in the paper. 
 
-# Resources
-[1] https://www.cs.unm.edu/~crandall/netsfall13/TCtutorial.pdf 
-
-[2] https://manpages.ubuntu.com/manpages/xenial/man1/iperf3.1.html 
-
-[3] https://witestlab.poly.edu/blog/tcp-congestion-control-basics/#setupexperiment 
-
-[4] https://docs.vmware.com/en/vRealize-Operations/8.10/com.vmware.vcom.scg.doc/GUID-DAC867BC-8C5F-4A5E-BB55-36FC25555696.html 
-
-[5] https://linuxhint.com/how-to-change-mtu-size-in-linux/ 
-
-[6] https://ffund.github.io/tcp-ip-essentials/lab1/1-5-tcpdump-wireshark 
-
-
-
---------------------------------------------------------------------------------------------------------------------
-
-##### Data to look at:
-iperf:
-
-BandWidth: compare it to model BW, you can find the ratio of experimental BW to model BW
-
-
-ss-output:
-
-1. min and avg rtt (that avg rtt is not much larger than min rtt, otherwise a queue would have formed)
-
-2. retrans and data_segs_out: packet loss=retrans/data_segs_out (that it matches what you set it to- not the percentage value)
-
-
 
 # Possible fixes
 We have to validate our experiments using ping (sends many packets) and generate an ss-output file to validate that our settings are correct by confirming the parameter values. 
